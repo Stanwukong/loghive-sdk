@@ -1,2 +1,2 @@
-export const DEFAULT_ENDPOINT = 'https://api/remotelogger.dev/api/v1/logs';
+export const DEFAULT_ENDPOINT = 'https://logger-back.vercel.app/api/v1';
 

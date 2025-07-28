@@ -3,7 +3,7 @@
   "version": "1.3.2",
   "description": "An SDK for the remote-logger platform",
   "main": "dist/index.js",
-  "types": "dist/types.d.ts",
+  "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "start-example": "ts-node example/index.ts",

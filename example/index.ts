@@ -35,10 +35,10 @@ const logger = new RemoteLogger({
   projectId: PROJECT_ID,
   endpoint: ENDPOINT,
   minLogLevel: LogLevel.INFO, // Only send INFO, WARN, ERROR, FATAL logs
-  batchSize: 3,              // Send logs in batches of 3
+  batchSize: 1,              // Send logs in batches of 3
   flushIntervalMs: 2000,     // Or every 2 seconds
   maxRetries: 2,             // Max 2 retries
-  retryDelayMs: 500,         // Initial retry delay of 0.5 seconds
+  retryDelayMs: 1000,         // Initial retry delay of 0.5 seconds
   environment: 'development',
   serviceName: 'example-node-app',
   serviceVersion: '1.0.0-beta',
@@ -56,8 +56,6 @@ console.log('Sending logs...');
 
 // --- Log various messages ---
 
-logger.trace('This trace message should NOT be sent.', { detail: 'Trace level' }); // Ignored by minLogLevel
-logger.debug('This debug message should also NOT be sent.', { detail: 'Debug level' }); // Ignored by minLogLevel
 
 logger.info('User logged in successfully.', { username: 'Alice', ipAddress: '192.168.1.1' });
 logger.warn('High CPU usage detected on server.', { cpuPercent: 85, serverId: 'prod-web-01' });
@@ -70,24 +68,24 @@ try {
 }
 
 // Log a few more to trigger batching
-logger.info('Processing data batch 1.', { records: 100 });
-logger.info('Processing data batch 2.', { records: 150 });
-logger.info('Processing data batch 3.', { records: 200 }); // This should trigger a flush due to batchSize
+// logger.info('Processing data batch 1.', { records: 100 });
+// logger.info('Processing data batch 2.', { records: 150 });
+// logger.info('Processing data batch 3.', { records: 200 }); // This should trigger a flush due to batchSize
 
 // Simulate another error
-setTimeout(() => {
-  try {
-    const data = JSON.parse('{"invalid json"'); // This will throw a syntax error
-  } catch (err) {
-    logger.fatal('Critical application error: JSON parsing failed!', err as Error, { file: 'config.json' });
-  }
-}, 3000); // After 3 seconds
+// setTimeout(() => {
+//   try {
+//     const data = JSON.parse('{"invalid json"'); // This will throw a syntax error
+//   } catch (err) {
+//     logger.fatal('Critical application error: JSON parsing failed!', err as Error, { file: 'config.json' });
+//   }
+// }, 3000); // After 3 seconds
 
 // Log some messages that will be caught by the flushIntervalMs
-setTimeout(() => {
-  logger.info('Background task completed.', { taskName: 'cleanup', durationMs: 50 });
-  logger.warn('Low disk space warning.', { diskFreeGB: 5 });
-}, 6000); // After 6 seconds
+// setTimeout(() => {
+//   logger.info('Background task completed.', { taskName: 'cleanup', durationMs: 50 });
+//   logger.warn('Low disk space warning.', { diskFreeGB: 5 });
+// }, 6000); // After 6 seconds
 
 // --- Graceful shutdown ---
 // In a real application, you'd hook this into process exit signals.
