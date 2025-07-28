@@ -7,7 +7,7 @@ A powerful, easy-to-use TypeScript SDK for sending application logs to your remo
 ### Installation
 
 ```bash
-npm install remotelogger-sdk
+npm install remote-logger-sdk
 ```
 
 ### Basic Usage
