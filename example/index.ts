@@ -20,8 +20,8 @@ import { RemoteLogger, LogLevel } from '../src'; // Adjust path if running from 
 dotenv.config();
 
 // --- Configuration ---
-const API_KEY = process.env.REMOTE_LOGGER_API_KEY;
-const PROJECT_ID = process.env.REMOTE_LOGGER_PROJECT_ID;
+const API_KEY = process.env.REMOTE_LOGGER_API_KEY || "60e1ba75-a67e-480a-8b9c-1e615ce3a987";
+const PROJECT_ID = process.env.REMOTE_LOGGER_PROJECT_ID || "6884171e07ebd35a3e34a5ba";
 const ENDPOINT = process.env.REMOTE_LOGGER_ENDPOINT;
 
 if (!API_KEY || !PROJECT_ID || !ENDPOINT) {
