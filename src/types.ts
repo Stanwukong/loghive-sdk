@@ -1,4 +1,4 @@
-// src/types.ts - Updated to match backend expectations
+// src/types.ts
 export enum LogLevel {
   TRACE = "trace",
   DEBUG = "debug",
@@ -20,10 +20,34 @@ export interface LoggerConfig {
   environment?: string;
   serviceName?: string;
   serviceVersion?: string;
+  // Auto-instrumentation options
+  autoCapture?: {
+    errors?: boolean;
+    performance?: boolean;
+    userInteractions?: boolean;
+    networkRequests?: boolean;
+    consoleMessages?: boolean;
+    pageViews?: boolean;
+    // Custom log level overrides
+    logLevels?: {
+      errors?: LogLevel;
+      networkSuccess?: LogLevel;
+      networkError?: LogLevel;
+      performanceSlow?: LogLevel;
+      performanceFast?: LogLevel;
+      interactions?: LogLevel;
+      pageViews?: LogLevel;
+      console?: {
+        error?: LogLevel;
+        warn?: LogLevel;
+        info?: LogLevel;
+      };
+    };
+  };
 }
 
 export interface LogEntry {
-  projectId: string; // Required field that matches backend expectation
+  projectId: string;
   timestamp?: string;
   level: LogLevel;
   message: string;
@@ -32,9 +56,41 @@ export interface LogEntry {
     name: string;
     message: string;
     stack?: string;
+    url?: string;
+    lineNumber?: number;
+    columnNumber?: number;
   };
   service?: string;
   environment?: string;
   context?: Record<string, any>;
   metadata?: any;
+  // Event-specific fields
+  eventType?: 'error' | 'performance' | 'interaction' | 'network' | 'console' | 'pageview';
+  userAgent?: string;
+  url?: string;
+  referrer?: string;
+}
+
+export interface PerformanceEntry {
+  name: string;
+  type: string;
+  startTime: number;
+  duration: number;
+  size?: number;
+}
+
+export interface UserInteraction {
+  type: 'click' | 'scroll' | 'keypress' | 'focus' | 'blur';
+  target: string;
+  timestamp: number;
+  coordinates?: { x: number; y: number };
+}
+
+export interface NetworkRequest {
+  url: string;
+  method: string;
+  status?: number;
+  duration: number;
+  size?: number;
+  timestamp: number;
 }
