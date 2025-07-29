@@ -1,7 +1,7 @@
 "use strict";
 /**
  * @file src/utils.ts
- * @description Contains utility functions for the RemoteLogger SDK.
+ * @description Contains utility functions for the Monita SDK.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.extractErrorDetails = exports.shouldLog = exports.getExponentialBackoffDelay = exports.delay = void 0;

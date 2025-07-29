@@ -1,6 +1,6 @@
 /**
  * @file src/utils.ts
- * @description Contains utility functions for the RemoteLogger SDK.
+ * @description Contains utility functions for the Monita SDK.
  */
 import { LogLevel } from './types';
 /**

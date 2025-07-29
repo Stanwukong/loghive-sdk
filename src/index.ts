@@ -1,8 +1,8 @@
-import { RemoteLogger } from './logger';
+import { Monita } from './logger';
 import { LoggerConfig } from './types';
 
 // src/index.ts
-export { RemoteLogger } from './logger';
+export { Monita } from './logger';
 export { 
   LoggerConfig, 
   LogEntry, 
@@ -15,5 +15,5 @@ export { AutoInstrumentation } from './auto-instrumentation';
 
 // Convenience function for quick setup
 export const createLogger = (config: LoggerConfig) => {
-  return new RemoteLogger(config);
+  return new Monita(config);
 };

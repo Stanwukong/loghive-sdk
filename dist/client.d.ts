@@ -1,16 +1,16 @@
 import { LogEntry } from './types';
-export interface RemoteLoggerOptions {
+export interface MonitaOptions {
     apiKey: string;
     source?: string;
     endpoint?: string;
 }
-export declare class RemoteLogger {
+export declare class Monita {
     private apiKey;
     private source?;
     private endpoint;
-    constructor(options: RemoteLoggerOptions);
+    constructor(options: MonitaOptions);
     /**
-     * Send a log entry to the RemoteLogger API
+     * Send a log entry to the Monita API
      */
     log(entry: LogEntry): Promise<any>;
     /**

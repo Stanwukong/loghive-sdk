@@ -1,12 +1,12 @@
 // src/advanced-features.ts
-import { RemoteLogger } from './logger';
+import { Monita } from './logger';
 
 // Context Manager for dynamic context updates
 export class ContextManager {
-  private logger: RemoteLogger;
+  private logger: Monita;
   private contextStack: Record<string, any>[] = [];
 
-  constructor(logger: RemoteLogger) {
+  constructor(logger: Monita) {
     this.logger = logger;
   }
 
@@ -67,9 +67,9 @@ export class RateLimiter {
 export class SessionManager {
   private sessionId: string;
   private sessionStart: number;
-  private logger: RemoteLogger;
+  private logger: Monita;
 
-  constructor(logger: RemoteLogger) {
+  constructor(logger: Monita) {
     this.logger = logger;
     this.sessionId = this.generateSessionId();
     this.sessionStart = Date.now();
@@ -125,10 +125,10 @@ export class SessionManager {
 
 // Custom Event Tracker
 export class CustomEventTracker {
-  private logger: RemoteLogger;
+  private logger: Monita;
   private rateLimiter: RateLimiter;
 
-  constructor(logger: RemoteLogger) {
+  constructor(logger: Monita) {
     this.logger = logger;
     this.rateLimiter = new RateLimiter(50, 60000); // 50 events per minute
   }
@@ -182,10 +182,10 @@ export class CustomEventTracker {
 
 // Feature Flag Integration
 export class FeatureFlagLogger {
-  private logger: RemoteLogger;
+  private logger: Monita;
   private activeFlags: Map<string, any> = new Map();
 
-  constructor(logger: RemoteLogger) {
+  constructor(logger: Monita) {
     this.logger = logger;
   }
 
@@ -219,10 +219,10 @@ export class FeatureFlagLogger {
 
 // A/B Test Integration
 export class ABTestLogger {
-  private logger: RemoteLogger;
+  private logger: Monita;
   private activeTests: Map<string, string> = new Map();
 
-  constructor(logger: RemoteLogger) {
+  constructor(logger: Monita) {
     this.logger = logger;
   }
 
@@ -259,10 +259,10 @@ export class ABTestLogger {
 
 // Performance Monitoring Extensions
 export class PerformanceMonitor {
-  private logger: RemoteLogger;
+  private logger: Monita;
   private marks: Map<string, number> = new Map();
 
-  constructor(logger: RemoteLogger) {
+  constructor(logger: Monita) {
     this.logger = logger;
   }
 
@@ -318,7 +318,7 @@ export class PerformanceMonitor {
 
 // Export enhanced logger factory
 export function createEnhancedLogger(config: any) {
-  const logger = new RemoteLogger(config);
+  const logger = new Monita(config);
   
   return {
     logger,

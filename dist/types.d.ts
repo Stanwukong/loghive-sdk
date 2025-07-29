@@ -1,6 +1,6 @@
 /**
  * @file src/types.ts
- * @description Defines the core types and interfaces for the RemoteLogger SDK.
+ * @description Defines the core types and interfaces for the Monita SDK.
  */
 /**
  * Enum for supported log levels.
@@ -14,21 +14,21 @@ export declare enum LogLevel {
     FATAL = "fatal"
 }
 /**
- * Interface for the configuration options of the RemoteLogger SDK.
+ * Interface for the configuration options of the Monita SDK.
  */
 export interface LoggerConfig {
     /**
-     * Your unique API key for authentication with the remote logger service.
+     * Your unique API key for authentication with the monita service.
      * This is required.
      */
     apiKey: string;
     /**
-     * Your project ID, used to categorize logs on the remote logger platform.
+     * Your project ID, used to categorize logs on the monita platform.
      * This is required.
      */
     projectId: string;
     /**
-     * The URL of your remote logger API endpoint where logs will be sent.
+     * The URL of your monita API endpoint where logs will be sent.
      * Default: 'https://api.yourlogger.com/v1/logs' (placeholder)
      */
     endpoint?: string;
@@ -74,7 +74,7 @@ export interface LoggerConfig {
     serviceVersion?: string;
 }
 /**
- * Interface representing a single log entry to be sent to the remote logger.
+ * Interface representing a single log entry to be sent to the monita.
  */
 export interface LogEntry {
     /**

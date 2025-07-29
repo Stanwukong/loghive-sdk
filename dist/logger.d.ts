@@ -1,13 +1,13 @@
 /**
  * @file src/logger.ts
- * @description Implements the main RemoteLogger class for sending logs to a remote service.
+ * @description Implements the main Monita class for sending logs to a remote service.
  */
 import { LoggerConfig } from './types';
 /**
- * The main class for the RemoteLogger SDK.
+ * The main class for the Monita SDK.
  * Provides methods to log messages at different levels and handles sending them to a remote endpoint.
  */
-export declare class RemoteLogger {
+export declare class Monita {
     private _config;
     private _logBuffer;
     private _context;
@@ -16,7 +16,7 @@ export declare class RemoteLogger {
     private _isShuttingDown;
     private _axiosInstance;
     /**
-     * Initializes a new instance of the RemoteLogger.
+     * Initializes a new instance of the Monita.
      * @param config Configuration options for the logger.
      */
     constructor(config: LoggerConfig);

@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RemoteLogger = void 0;
+exports.Monita = void 0;
 const config_1 = require("./config");
-class RemoteLogger {
+class Monita {
     constructor(options) {
         if (!options.apiKey)
             throw new Error("API key is required");
@@ -11,7 +11,7 @@ class RemoteLogger {
         this.endpoint = options.endpoint || config_1.DEFAULT_ENDPOINT;
     }
     /**
-     * Send a log entry to the RemoteLogger API
+     * Send a log entry to the Monita API
      */
     async log(entry) {
         const payload = {
@@ -49,4 +49,4 @@ class RemoteLogger {
         return this.log({ message, level: 'debug', metadata });
     }
 }
-exports.RemoteLogger = RemoteLogger;
+exports.Monita = Monita;

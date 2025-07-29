@@ -1,6 +1,6 @@
-# RemoteLogger SDK
+# Monita SDK
 
-[![npm version](https://badge.fury.io/js/remote-logger-sdk.svg)](https://badge.fury.io/js/remote-logger-sdk)
+[![npm version](https://badge.fury.io/js/monita-sdk.svg)](https://badge.fury.io/js/monita-sdk)
 [![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg)](http://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -24,20 +24,20 @@ A powerful, TypeScript-first logging SDK with automatic error tracking, performa
 ### Installation
 
 ```bash
-npm install remote-logger-sdk
+npm install monita-sdk
 # or
-yarn add remote-logger-sdk
+yarn add monita-sdk
 # or
-pnpm add remote-logger-sdk
+pnpm add monita-sdk
 ```
 
 ### Basic Usage
 
 ```typescript
-import { RemoteLogger, LogLevel } from "remote-logger-sdk";
+import { Monita, LogLevel } from "monita-sdk";
 
 // Initialize with auto-instrumentation
-const logger = new RemoteLogger({
+const logger = new Monita({
   apiKey: "your-api-key",
   projectId: "your-project-id",
   environment: "production",
@@ -73,7 +73,7 @@ With zero configuration, the SDK automatically captures:
 ### Auto-Capture Settings
 
 ```typescript
-const logger = new RemoteLogger({
+const logger = new Monita({
   apiKey: "your-api-key",
   projectId: "your-project-id",
 
@@ -104,7 +104,7 @@ const logger = new RemoteLogger({
 
 ```typescript
 // Development
-const devLogger = new RemoteLogger({
+const devLogger = new Monita({
   apiKey: "dev-key",
   projectId: "dev-project",
   environment: "development",
@@ -117,7 +117,7 @@ const devLogger = new RemoteLogger({
 });
 
 // Production
-const prodLogger = new RemoteLogger({
+const prodLogger = new Monita({
   apiKey: "prod-key",
   projectId: "prod-project",
   environment: "production",
@@ -214,8 +214,8 @@ The SDK automatically protects sensitive data:
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/remote-logger-sdk.git
-cd remote-logger-sdk
+git clone https://github.com/your-org/monita-sdk.git
+cd monita-sdk
 
 # Install dependencies
 npm install
@@ -243,10 +243,10 @@ npm run test:coverage
 
 ## 📖 Documentation
 
-- [Full Documentation](https://docs.remotelogger.com)
-- [API Reference](https://docs.remotelogger.com/api)
-- [Integration Guides](https://docs.remotelogger.com/integrations)
-- [Examples](https://github.com/your-org/remote-logger-examples)
+- [Full Documentation](https://docs.monita.com)
+- [API Reference](https://docs.monita.com/api)
+- [Integration Guides](https://docs.monita.com/integrations)
+- [Examples](https://github.com/your-org/monita-examples)
 
 ## 🤝 Contributing
 
@@ -264,10 +264,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🆘 Support
 
-- 📧 Email: support@remotelogger.com
-- 💬 Discord: [Join our community](https://discord.gg/remotelogger)
-- 🐛 Issues: [GitHub Issues](https://github.com/your-org/remote-logger-sdk/issues)
-- 📚 Docs: [Documentation](https://docs.remotelogger.com)
+- 📧 Email: support@monita.com
+- 💬 Discord: [Join our community](https://discord.gg/monita)
+- 🐛 Issues: [GitHub Issues](https://github.com/your-org/monita-sdk/issues)
+- 📚 Docs: [Documentation](https://docs.monita.com)
 
 ## 🚀 Roadmap
 
@@ -280,4 +280,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Made with ❤️ by the RemoteLogger team**
+**Made with ❤️ by the Monita team**

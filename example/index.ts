@@ -1,8 +1,8 @@
 /**
  * @file example/index.ts
- * @description Comprehensive example usage of the RemoteLogger SDK.
+ * @description Comprehensive example usage of the Monita SDK.
  * This file demonstrates initialization, configuration, and various logging scenarios
- * to test the new version of the remote-logger SDK.
+ * to test the new version of the monita SDK.
  *
  * To run this example:
  * 1. Ensure you have Node.js and npm installed.
@@ -14,11 +14,11 @@
  * 5. Run `npm run start-example` to execute this example.
  */
 
-// import dotenv from "dotenv";
-import { RemoteLogger, LogLevel } from "../src"; // Adjust path if running from different directory
+import dotenv from "dotenv";
+import { Monita, LogLevel } from "../src"; // Adjust path if running from different directory
 
 // Load environment variables from .env file
-// dotenv.config();
+dotenv.config();
 
 // --- Configuration ---
 const API_KEY =
@@ -35,7 +35,7 @@ if (!API_KEY || !PROJECT_ID || !ENDPOINT) {
 }
 
 // --- Initialize the logger with comprehensive configuration ---
-const logger = new RemoteLogger({
+const logger = new Monita({
   apiKey: API_KEY,
   projectId: PROJECT_ID,
   endpoint: ENDPOINT,
@@ -45,7 +45,7 @@ const logger = new RemoteLogger({
   maxRetries: 3, // Increased retries for better reliability
   retryDelayMs: 1000, // Retry delay
   environment: "testing", // Changed to testing environment
-  serviceName: "remote-logger-test-app", // Changed from serviceName to service
+  serviceName: "monita-test-app", // Changed from serviceName to service
   autoCapture: {
     networkRequests: true,
     performance: true
@@ -64,7 +64,7 @@ logger.setContext({
   // Note: context will be stored in the 'context' field of the log document
 });
 
-console.log("🚀 RemoteLogger SDK Test Suite Started...");
+console.log("🚀 Monita SDK Test Suite Started...");
 console.log("📊 Configuration:", {
   environment: "testing",
   minLogLevel: "TRACE",
@@ -307,7 +307,7 @@ async function runTestSuite() {
         stack: (error as Error).stack,
       },
       {
-        testSuite: "remote-logger-comprehensive",
+        testSuite: "monita-comprehensive",
         timestamp: new Date().toISOString(),
       }
     );
@@ -345,7 +345,7 @@ process.on("uncaughtException", (error) => {
       stack: error.stack,
     },
     {
-      testSuite: "remote-logger-comprehensive",
+      testSuite: "monita-comprehensive",
       timestamp: new Date().toISOString(),
     }
   );
@@ -369,7 +369,7 @@ process.on("unhandledRejection", (reason, promise) => {
 
   logger.fatal("Unhandled promise rejection in test suite", undefined, {
     ...errorData,
-    testSuite: "remote-logger-comprehensive",
+    testSuite: "monita-comprehensive",
     timestamp: new Date().toISOString(),
   });
   gracefulShutdown("UNHANDLED_REJECTION");

@@ -4,7 +4,7 @@ import { LoggerConfig, LogEntry, LogLevel } from './types';
 import { delay, getExponentialBackoffDelay, shouldLog, extractErrorDetails, isInBrowser } from './utils';
 import { AutoInstrumentation } from './auto-instrumentation';
 
-export class RemoteLogger {
+export class Monita {
   private _config: Required<LoggerConfig>;
   private _logBuffer: LogEntry[] = [];
   private _context: Record<string, any> = {};
@@ -41,10 +41,10 @@ export class RemoteLogger {
 
     // Validate required configuration
     if (!this._config.apiKey) {
-      throw new Error('RemoteLogger: API Key is required.');
+      throw new Error('Monita: API Key is required.');
     }
     if (!this._config.projectId) {
-      throw new Error('RemoteLogger: Project ID is required.');
+      throw new Error('Monita: Project ID is required.');
     }
 
     // Create Axios instance
@@ -118,7 +118,7 @@ export class RemoteLogger {
 
   public _log(level: LogLevel, message: string, error?: Error, data?: Record<string, any>): void {
     if (this._isShuttingDown) {
-      console.warn(`RemoteLogger: Attempted to log "${message}" during shutdown. Log ignored.`);
+      console.warn(`Monita: Attempted to log "${message}" during shutdown. Log ignored.`);
       return;
     }
 
@@ -211,7 +211,7 @@ export class RemoteLogger {
     try {
       await this._sendLogs(logsToSend);
     } catch (err) {
-      console.error('RemoteLogger: Failed to send logs after retries. Re-adding to buffer.', err);
+      console.error('Monita: Failed to send logs after retries. Re-adding to buffer.', err);
       this._logBuffer.unshift(...logsToSend);
     } finally {
       this._isFlushing = false;
@@ -227,7 +227,7 @@ export class RemoteLogger {
     
     try {
       await Promise.all(sendPromises);
-      console.log(`RemoteLogger: Successfully sent ${logs.length} logs.`);
+      console.log(`Monita: Successfully sent ${logs.length} logs.`);
     } catch (error) {
       throw error;
     }
@@ -243,39 +243,39 @@ export class RemoteLogger {
         if (response.status >= 200 && response.status < 300) {
           return;
         } else {
-          console.warn(`RemoteLogger: API returned status ${response.status} on attempt ${attempt + 1}.`);
+          console.warn(`Monita: API returned status ${response.status} on attempt ${attempt + 1}.`);
         }
       } catch (error) {
         const axiosError = error as AxiosError;
         
         if (axiosError.response) {
           console.error(
-            `RemoteLogger: API Error ${axiosError.response.status} on attempt ${attempt + 1}:`,
+            `Monita: API Error ${axiosError.response.status} on attempt ${attempt + 1}:`,
             axiosError.response.data
           );
           
           if (axiosError.response.status >= 400 && axiosError.response.status < 500) {
             if (axiosError.response.status === 401 || axiosError.response.status === 403) {
-              console.error('RemoteLogger: Authentication/Authorization failed. Check API Key.');
+              console.error('Monita: Authentication/Authorization failed. Check API Key.');
             }
-            throw new Error(`RemoteLogger: Non-retryable API error: ${axiosError.response.status}`);
+            throw new Error(`Monita: Non-retryable API error: ${axiosError.response.status}`);
           }
         } else if (axiosError.request) {
-          console.error(`RemoteLogger: Network Error on attempt ${attempt + 1}: No response from server.`);
+          console.error(`Monita: Network Error on attempt ${attempt + 1}: No response from server.`);
         } else {
-          console.error(`RemoteLogger: Request setup error on attempt ${attempt + 1}:`, axiosError.message);
-          throw new Error(`RemoteLogger: Non-retryable request error: ${axiosError.message}`);
+          console.error(`Monita: Request setup error on attempt ${attempt + 1}:`, axiosError.message);
+          throw new Error(`Monita: Non-retryable request error: ${axiosError.message}`);
         }
       }
 
       if (attempt < this._config.maxRetries) {
         const retryDelay = getExponentialBackoffDelay(attempt, this._config.retryDelayMs);
-        console.warn(`RemoteLogger: Retrying in ${retryDelay}ms... (Attempt ${attempt + 1} of ${this._config.maxRetries})`);
+        console.warn(`Monita: Retrying in ${retryDelay}ms... (Attempt ${attempt + 1} of ${this._config.maxRetries})`);
         await delay(retryDelay);
       }
     }
     
-    throw new Error(`RemoteLogger: Failed to send log after ${this._config.maxRetries} retries.`);
+    throw new Error(`Monita: Failed to send log after ${this._config.maxRetries} retries.`);
   }
 
   public async shutdown(): Promise<void> {
@@ -289,8 +289,8 @@ export class RemoteLogger {
     // Cleanup auto-instrumentation
     this._autoInstrumentation.destroy();
     
-    console.log('RemoteLogger: Shutting down. Flushing remaining logs...');
+    console.log('Monita: Shutting down. Flushing remaining logs...');
     await this.flush();
-    console.log('RemoteLogger: Shutdown complete.');
+    console.log('Monita: Shutdown complete.');
   }
 }

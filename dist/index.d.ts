@@ -1,7 +1,7 @@
 /**
  * @file src/index.ts
- * @description Main entry point for the RemoteLogger SDK.
- * Exports the RemoteLogger class and related types.
+ * @description Main entry point for the Monita SDK.
+ * Exports the Monita class and related types.
  */
-export { RemoteLogger } from './logger';
+export { Monita } from './logger';
 export { LoggerConfig, LogEntry, LogLevel } from './types';

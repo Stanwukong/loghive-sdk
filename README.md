@@ -1,22 +1,22 @@
-# RemoteLogger SDK
+# Monita SDK
 
-A powerful, easy-to-use TypeScript SDK for sending application logs to your remote logging platform. Perfect for monitoring, debugging, and tracking your application's behavior in real-time.
+A powerful, easy-to-use TypeScript SDK for sending application logs to your monita logging platform. Perfect for monitoring, debugging, and tracking your application's behavior in real-time.
 
 ## 🚀 Quick Start
 
 ### Installation
 
 ```bash
-npm install remote-logger-sdk
+npm install monita-sdk
 ```
 
 ### Basic Usage
 
 ```typescript
-import { RemoteLogger } from 'remotelogger-sdk';
+import { Monita } from 'monita-sdk';
 
 // Initialize the logger
-const logger = new RemoteLogger({
+const logger = new Monita({
   apiKey: 'your-api-key-here',
   projectId: 'your-project-id-here',
   endpoint: 'https://your-logging-platform.com/api/v1'
@@ -44,7 +44,7 @@ logger.error('Something went wrong', new Error('Database connection failed'));
 ### Required Configuration
 
 ```typescript
-const logger = new RemoteLogger({
+const logger = new Monita({
   apiKey: 'your-api-key-here',        // Your API authentication key
   projectId: 'your-project-id-here',  // Your project identifier
   endpoint: 'https://api.yourlogger.com/api/v1' // Your logging platform URL
@@ -54,7 +54,7 @@ const logger = new RemoteLogger({
 ### Full Configuration Options
 
 ```typescript
-const logger = new RemoteLogger({
+const logger = new Monita({
   // Required
   apiKey: 'your-api-key-here',
   projectId: 'your-project-id-here',
@@ -83,7 +83,7 @@ const logger = new RemoteLogger({
 The SDK supports 6 log levels (from lowest to highest priority):
 
 ```typescript
-import { LogLevel } from 'remotelogger-sdk';
+import { LogLevel } from 'monita-sdk';
 
 logger.trace('Very detailed debug information');    // TRACE
 logger.debug('Debug information for developers');   // DEBUG  
@@ -182,7 +182,7 @@ process.on('SIGINT', async () => {
 Control which logs are sent based on importance:
 
 ```typescript
-const logger = new RemoteLogger({
+const logger = new Monita({
   apiKey: 'your-api-key',
   projectId: 'your-project-id',
   endpoint: 'https://api.yourlogger.com/api/v1',
@@ -205,26 +205,26 @@ logger.info('This log will be retried if network fails');
 
 // Authentication errors are logged but won't throw
 // Check console for error messages like:
-// "RemoteLogger: Authentication/Authorization failed. Check API Key."
+// "Monita: Authentication/Authorization failed. Check API Key."
 
 // Failed logs are re-queued for later attempts
-// You'll see: "RemoteLogger: Failed to send logs after retries. Re-adding to buffer."
+// You'll see: "Monita: Failed to send logs after retries. Re-adding to buffer."
 ```
 
 ### Monitoring SDK Health
 
 ```typescript
 // Listen for SDK status (if you need custom error handling)
-const logger = new RemoteLogger({
+const logger = new Monita({
   apiKey: 'your-api-key',
   projectId: 'your-project-id',
   endpoint: 'https://api.yourlogger.com/api/v1'
 });
 
 // The SDK will log its own status to console:
-// ✅ "RemoteLogger: Successfully sent 5 logs."
-// ❌ "RemoteLogger: API Error 500 on attempt 1: ..."
-// 🔄 "RemoteLogger: Retrying in 1000ms... (Attempt 1 of 3)"
+// ✅ "Monita: Successfully sent 5 logs."
+// ❌ "Monita: API Error 500 on attempt 1: ..."
+// 🔄 "Monita: Retrying in 1000ms... (Attempt 1 of 3)"
 ```
 
 ## 💡 Best Practices
@@ -233,9 +233,9 @@ const logger = new RemoteLogger({
 
 ```typescript
 // logger.ts - Create a shared logger instance
-import { RemoteLogger, LogLevel } from 'remotelogger-sdk';
+import { Monita, LogLevel } from 'monita-sdk';
 
-export const logger = new RemoteLogger({
+export const logger = new Monita({
   apiKey: process.env.REMOTELOGGER_API_KEY!,
   projectId: process.env.REMOTELOGGER_PROJECT_ID!,
   endpoint: process.env.REMOTELOGGER_ENDPOINT!,
@@ -304,7 +304,7 @@ process.on('SIGTERM', gracefulShutdown);  // Docker/K8s shutdown
 
 ```typescript
 // For high-throughput applications
-const logger = new RemoteLogger({
+const logger = new Monita({
   apiKey: 'your-api-key',
   projectId: 'your-project-id',
   endpoint: 'https://api.yourlogger.com/api/v1',
@@ -380,12 +380,12 @@ logger.shutdown(): Promise<void>
 #### 1. "API Key is required" Error
 ```typescript
 // ❌ Missing API key
-const logger = new RemoteLogger({
+const logger = new Monita({
   projectId: 'my-project'
 });
 
 // ✅ Include API key
-const logger = new RemoteLogger({
+const logger = new Monita({
   apiKey: 'your-api-key-here',
   projectId: 'my-project',
   endpoint: 'https://api.yourlogger.com/api/v1'
@@ -406,7 +406,7 @@ const logger = new RemoteLogger({
 #### 4. Logs Not Appearing
 ```typescript
 // Make sure you're above the minimum log level
-const logger = new RemoteLogger({
+const logger = new Monita({
   apiKey: 'your-api-key',
   projectId: 'your-project-id',
   endpoint: 'https://api.yourlogger.com/api/v1',
@@ -420,7 +420,7 @@ logger.error('This will be sent');   // Will be sent
 #### 5. Performance Issues
 ```typescript
 // Reduce batch size and increase flush frequency for faster delivery
-const logger = new RemoteLogger({
+const logger = new Monita({
   apiKey: 'your-api-key',
   projectId: 'your-project-id', 
   endpoint: 'https://api.yourlogger.com/api/v1',
@@ -436,9 +436,9 @@ Enable debug logging to see what's happening:
 ```typescript
 // The SDK automatically logs its status to console
 // Look for messages like:
-// "RemoteLogger: Successfully sent 3 logs."
-// "RemoteLogger: API Error 401 on attempt 1: Unauthorized"
-// "RemoteLogger: Retrying in 2000ms... (Attempt 2 of 3)"
+// "Monita: Successfully sent 3 logs."
+// "Monita: API Error 401 on attempt 1: Unauthorized"
+// "Monita: Retrying in 2000ms... (Attempt 2 of 3)"
 ```
 
 ## 📚 Examples
@@ -447,10 +447,10 @@ Enable debug logging to see what's happening:
 
 ```typescript
 import express from 'express';
-import { RemoteLogger, LogLevel } from 'remotelogger-sdk';
+import { Monita, LogLevel } from 'monita-sdk';
 
 const app = express();
-const logger = new RemoteLogger({
+const logger = new Monita({
   apiKey: process.env.REMOTELOGGER_API_KEY!,
   projectId: process.env.REMOTELOGGER_PROJECT_ID!,
   endpoint: process.env.REMOTELOGGER_ENDPOINT!,
@@ -509,9 +509,9 @@ app.listen(3000, () => {
 
 ```typescript
 // logger.ts
-import { RemoteLogger, LogLevel } from 'remotelogger-sdk';
+import { Monita, LogLevel } from 'monita-sdk';
 
-export const logger = new RemoteLogger({
+export const logger = new Monita({
   apiKey: process.env.REACT_APP_REMOTELOGGER_API_KEY!,
   projectId: process.env.REACT_APP_REMOTELOGGER_PROJECT_ID!,
   endpoint: process.env.REACT_APP_REMOTELOGGER_ENDPOINT!,
@@ -565,9 +565,9 @@ export default App;
 ### Background Job Processor
 
 ```typescript
-import { RemoteLogger } from 'remotelogger-sdk';
+import { Monita } from 'monita-sdk';
 
-const logger = new RemoteLogger({
+const logger = new Monita({
   apiKey: process.env.REMOTELOGGER_API_KEY!,
   projectId: process.env.REMOTELOGGER_PROJECT_ID!,
   endpoint: process.env.REMOTELOGGER_ENDPOINT!,

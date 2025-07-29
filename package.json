@@ -18,7 +18,7 @@
     "metrics",
     "monitor",
     "track",
-    "remote-logger",
+    "monita",
     "sdk",
     "logging"
   ],
@@ -30,6 +30,7 @@
     "typescript": "^5.x.x"
   },
   "dependencies": {
-    "axios": "^1.x.x"
+    "axios": "^1.x.x",
+    "dotenv": "^17.2.1"
   }
 }
