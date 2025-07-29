@@ -1,6 +1,5 @@
 // src/advanced-features.ts
 import { RemoteLogger } from './logger';
-import { LogLevel } from './types';
 
 // Context Manager for dynamic context updates
 export class ContextManager {
