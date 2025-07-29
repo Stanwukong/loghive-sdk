@@ -14,11 +14,11 @@
  * 5. Run `npm run start-example` to execute this example.
  */
 
-import dotenv from "dotenv";
+// import dotenv from "dotenv";
 import { RemoteLogger, LogLevel } from "../src"; // Adjust path if running from different directory
 
 // Load environment variables from .env file
-dotenv.config();
+// dotenv.config();
 
 // --- Configuration ---
 const API_KEY =
@@ -46,7 +46,10 @@ const logger = new RemoteLogger({
   retryDelayMs: 1000, // Retry delay
   environment: "testing", // Changed to testing environment
   serviceName: "remote-logger-test-app", // Changed from serviceName to service
-  // serviceVersion removed as it's not in the schema
+  autoCapture: {
+    networkRequests: true,
+    performance: true
+  }
 });
 
 // --- Set comprehensive global context ---
