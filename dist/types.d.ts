@@ -18,17 +18,17 @@ export declare enum LogLevel {
  */
 export interface LoggerConfig {
     /**
-     * Your unique API key for authentication with the monita service.
+     * Your unique API key for authentication with the LogHive service.
      * This is required.
      */
     apiKey: string;
     /**
-     * Your project ID, used to categorize logs on the monita platform.
+     * Your project ID, used to categorize logs on the LogHive platform.
      * This is required.
      */
     projectId: string;
     /**
-     * The URL of your monita API endpoint where logs will be sent.
+     * The URL of your Lo API endpoint where logs will be sent.
      * Default: 'https://api.yourlogger.com/v1/logs' (placeholder)
      */
     endpoint?: string;
@@ -74,7 +74,7 @@ export interface LoggerConfig {
     serviceVersion?: string;
 }
 /**
- * Interface representing a single log entry to be sent to the monita.
+ * Interface representing a single log entry to be sent to LogHive.
  */
 export interface LogEntry {
     /**

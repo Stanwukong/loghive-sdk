@@ -1,1 +1,1 @@
-export declare const DEFAULT_ENDPOINT = "https://api/monita.dev/api/v1/logs";
+export declare const DEFAULT_ENDPOINT = "https://logger-back.vercel.app/api/v1/logs";

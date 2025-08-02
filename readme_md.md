@@ -214,7 +214,7 @@ The SDK automatically protects sensitive data:
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/monita-sdk.git
+git clone https://github.com/stanwukong/monita-sdk.git
 cd monita-sdk
 
 # Install dependencies
@@ -243,20 +243,7 @@ npm run test:coverage
 
 ## 📖 Documentation
 
-- [Full Documentation](https://docs.monita.com)
-- [API Reference](https://docs.monita.com/api)
-- [Integration Guides](https://docs.monita.com/integrations)
-- [Examples](https://github.com/your-org/monita-examples)
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+- [Full Documentation](https://loghive.vercel.app/sdk)
 
 ## 📄 License
 
@@ -264,10 +251,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🆘 Support
 
-- 📧 Email: support@monita.com
-- 💬 Discord: [Join our community](https://discord.gg/monita)
-- 🐛 Issues: [GitHub Issues](https://github.com/your-org/monita-sdk/issues)
-- 📚 Docs: [Documentation](https://docs.monita.com)
+- 📧 Email: stanleyajanaku@gmail.com
+- 🐛 Issues: [GitHub Issues](https://github.com/stanwukong/monita-sdk/issues)
+- 📚 Docs: [Documentation](https://loghive.vercel.app/sdk)
 
 ## 🚀 Roadmap
 
@@ -280,4 +266,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Made with ❤️ by the Monita team**
+**Made with ❤️ by the LogHive team**
