@@ -18,10 +18,6 @@ export declare function extractErrorDetails(error: any): {
     columnNumber?: number;
 };
 /**
- * Checks if we're running in a browser environment
- */
-export declare function isBrowser(): boolean;
-/**
  * Checks if we're running in a Node.js environment
  */
 export declare function isNode(): boolean;

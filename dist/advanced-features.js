@@ -12,14 +12,14 @@ class ContextManager {
     }
     // Push context onto stack
     pushContext(context) {
-        this.contextStack.push({ ...this.logger['_context'] });
-        this.logger.setContext(context);
+        this.contextStack.push(this.logger.getContext());
+        this.logger.setContext({ ...this.logger.getContext(), ...context });
     }
     // Pop context from stack
     popContext() {
         const previousContext = this.contextStack.pop();
         if (previousContext) {
-            this.logger['_context'] = previousContext;
+            this.logger.setContext(previousContext);
         }
     }
     // Execute function with temporary context
@@ -38,8 +38,31 @@ exports.ContextManager = ContextManager;
 class RateLimiter {
     constructor(maxEvents = 10, timeWindowMs = 60000) {
         this.events = new Map();
+        this.cleanupInterval = null;
         this.maxEvents = maxEvents;
         this.timeWindow = timeWindowMs;
+        // Periodic cleanup to prevent memory leaks
+        this.cleanupInterval = setInterval(() => {
+            this.cleanup();
+        }, timeWindowMs);
+    }
+    cleanup() {
+        const now = Date.now();
+        for (const [key, events] of this.events.entries()) {
+            const recentEvents = events.filter(time => now - time < this.timeWindow);
+            if (recentEvents.length === 0) {
+                this.events.delete(key);
+            }
+            else {
+                this.events.set(key, recentEvents);
+            }
+        }
+    }
+    destroy() {
+        if (this.cleanupInterval) {
+            clearInterval(this.cleanupInterval);
+            this.cleanupInterval = null;
+        }
     }
     shouldAllow(eventKey) {
         const now = Date.now();

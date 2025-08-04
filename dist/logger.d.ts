@@ -11,6 +11,7 @@ export declare class Monita {
     constructor(config: LoggerConfig);
     init(): void;
     setContext(context: Record<string, any>): void;
+    getContext(): Record<string, any>;
     _log(level: LogLevel, message: string, error?: Error, data?: Record<string, any>): void;
     trace(message: string, data?: Record<string, any>): void;
     debug(message: string, data?: Record<string, any>): void;

@@ -18,7 +18,7 @@ class Monita {
         this._isShuttingDown = false;
         // Apply default values to the configuration
         this._config = {
-            endpoint: 'http://localhost:3000/api/v1',
+            endpoint: 'http://localhost:5000/api/v1',
             minLogLevel: types_1.LogLevel.INFO,
             batchSize: 10,
             flushIntervalMs: 5000,
@@ -36,7 +36,7 @@ class Monita {
                 networkRequests: true,
                 consoleMessages: false,
                 pageViews: true,
-                ...config.autoCapture,
+                ...(config.autoCapture || {}),
             },
         };
         // Validate required configuration
@@ -46,14 +46,24 @@ class Monita {
         if (!this._config.projectId) {
             throw new Error('Monita: Project ID is required.');
         }
-        // Create Axios instance
-        this._axiosInstance = axios_1.default.create({
-            timeout: 10000,
-            headers: {
-                'Content-Type': 'application/json',
-                'X-API-Key': this._config.apiKey,
-            },
-        });
+        // Axios instance creation with error handling
+        try {
+            if (typeof axios_1.default === 'undefined') {
+                throw new Error('Axios is not available in this environment');
+            }
+            // Create Axios instance
+            this._axiosInstance = axios_1.default.create({
+                timeout: 10000,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-API-Key': this._config.apiKey,
+                },
+            });
+        }
+        catch (error) {
+            console.error('Monita: Failed to create HTTP client:', error);
+            throw new Error('Axios is not available in this environment');
+        }
         // Initialize auto-instrumentation
         this._autoInstrumentation = new auto_instrumentation_1.AutoInstrumentation(this);
         this.init();
@@ -103,6 +113,9 @@ class Monita {
     }
     setContext(context) {
         this._context = { ...this._context, ...context };
+    }
+    getContext() {
+        return { ...this._context };
     }
     _log(level, message, error, data) {
         if (this._isShuttingDown) {
@@ -218,7 +231,7 @@ class Monita {
             catch (error) {
                 const axiosError = error;
                 if (axiosError.response) {
-                    console.error(`Monita: API Error ${axiosError.response.status} on attempt ${attempt + 1}:`, axiosError.response.data);
+                    console.error(`Monita: API Error ${axiosError.response.status} on attempt ${attempt + 1}`);
                     if (axiosError.response.status >= 400 && axiosError.response.status < 500) {
                         if (axiosError.response.status === 401 || axiosError.response.status === 403) {
                             console.error('Monita: Authentication/Authorization failed. Check API Key.');

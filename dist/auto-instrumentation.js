@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AutoInstrumentation = void 0;
-// src/auto-instrumentation.ts
 const types_1 = require("./types");
 const utils_1 = require("./utils");
 class AutoInstrumentation {
@@ -10,8 +9,11 @@ class AutoInstrumentation {
     }
     init(config) {
         if (!(0, utils_1.isInBrowser)()) {
-            console.warn('AutoInstrumentation: Not in browser environment, skipping initialization');
+            console.warn("AutoInstrumentation: Not in browser environment, skipping initialization");
             return;
+        }
+        if (typeof window === "undefined") {
+            console.warn("AutoInstrumentation: Window object not available");
         }
         if (config.errors) {
             this.setupErrorCapture();
@@ -34,11 +36,11 @@ class AutoInstrumentation {
     }
     setupErrorCapture() {
         // Global error handler
-        window.addEventListener('error', (event) => {
+        window.addEventListener("error", (event) => {
             const errorDetails = (0, utils_1.extractErrorDetails)(event);
             // All uncaught errors are ERROR level - they need immediate attention
-            this.logger._log(types_1.LogLevel.ERROR, 'Uncaught Error', undefined, {
-                eventType: 'error',
+            this.logger._log(types_1.LogLevel.ERROR, "Uncaught Error", undefined, {
+                eventType: "error",
                 error: errorDetails,
                 url: window.location.href,
                 userAgent: navigator.userAgent,
@@ -46,12 +48,14 @@ class AutoInstrumentation {
             });
         });
         // Unhandled promise rejection handler
-        window.addEventListener('unhandledrejection', (event) => {
-            const error = event.reason instanceof Error ? event.reason : new Error(String(event.reason));
+        window.addEventListener("unhandledrejection", (event) => {
+            const error = event.reason instanceof Error
+                ? event.reason
+                : new Error(String(event.reason));
             const errorDetails = (0, utils_1.extractErrorDetails)(error);
             // Promise rejections are also ERROR level - they indicate unhandled failures
-            this.logger._log(types_1.LogLevel.ERROR, 'Unhandled Promise Rejection', undefined, {
-                eventType: 'error',
+            this.logger._log(types_1.LogLevel.ERROR, "Unhandled Promise Rejection", undefined, {
+                eventType: "error",
                 error: errorDetails,
                 url: window.location.href,
                 userAgent: navigator.userAgent,
@@ -60,8 +64,8 @@ class AutoInstrumentation {
         });
     }
     setupPerformanceCapture() {
-        if (!('PerformanceObserver' in window)) {
-            console.warn('AutoInstrumentation: PerformanceObserver not supported');
+        if (!("PerformanceObserver" in window)) {
+            console.warn("AutoInstrumentation: PerformanceObserver not supported");
             return;
         }
         try {
@@ -75,46 +79,47 @@ class AutoInstrumentation {
                         duration: entry.duration,
                     };
                     // Add size for resource entries
-                    if ('transferSize' in entry) {
+                    if ("transferSize" in entry) {
                         perfEntry.size = entry.transferSize;
                     }
                     // Smart log level based on performance thresholds
                     let level = types_1.LogLevel.DEBUG;
-                    let message = 'Performance Entry';
-                    if (entry.entryType === 'navigation') {
+                    let message = "Performance Entry";
+                    if (entry.entryType === "navigation") {
                         if (entry.duration > 3000) {
                             level = types_1.LogLevel.WARN;
-                            message = 'Slow Page Load';
+                            message = "Slow Page Load";
                         }
                         else if (entry.duration > 1000) {
                             level = types_1.LogLevel.INFO;
-                            message = 'Page Load Performance';
+                            message = "Page Load Performance";
                         }
                     }
-                    else if (entry.entryType === 'resource') {
+                    else if (entry.entryType === "resource") {
                         if (entry.duration > 3000) {
                             level = types_1.LogLevel.WARN;
-                            message = 'Slow Resource Load';
+                            message = "Slow Resource Load";
                         }
-                        else if (entry.name.includes('.css') || entry.name.includes('.js')) {
+                        else if (entry.name.includes(".css") ||
+                            entry.name.includes(".js")) {
                             if (entry.duration > 1000) {
                                 level = types_1.LogLevel.INFO;
-                                message = 'Critical Resource Load';
+                                message = "Critical Resource Load";
                             }
                         }
                     }
-                    else if (entry.entryType === 'paint') {
+                    else if (entry.entryType === "paint") {
                         if (entry.duration > 2000) {
                             level = types_1.LogLevel.WARN;
-                            message = 'Slow Paint';
+                            message = "Slow Paint";
                         }
                         else if (entry.duration > 1000) {
                             level = types_1.LogLevel.INFO;
-                            message = 'Paint Performance';
+                            message = "Paint Performance";
                         }
                     }
                     this.logger._log(level, message, undefined, {
-                        eventType: 'performance',
+                        eventType: "performance",
                         performance: perfEntry,
                         url: window.location.href,
                         timestamp: Date.now(),
@@ -122,10 +127,12 @@ class AutoInstrumentation {
                 });
             });
             // Observe different types of performance entries
-            this.performanceObserver.observe({ entryTypes: ['navigation', 'resource', 'measure', 'paint'] });
+            this.performanceObserver.observe({
+                entryTypes: ["navigation", "resource", "measure", "paint"],
+            });
         }
         catch (error) {
-            console.warn('AutoInstrumentation: Failed to setup performance observer:', error);
+            console.warn("AutoInstrumentation: Failed to setup performance observer:", error);
         }
     }
     setupUserInteractionCapture() {
@@ -143,35 +150,35 @@ class AutoInstrumentation {
             }
             // Smart log levels for different interaction types
             let level = types_1.LogLevel.DEBUG;
-            if (type === 'scroll' || type === 'keypress') {
+            if (type === "scroll" || type === "keypress") {
                 level = types_1.LogLevel.TRACE; // Very frequent, lowest priority
             }
             this.logger._log(level, `User ${type}`, undefined, {
-                eventType: 'interaction',
+                eventType: "interaction",
                 interaction,
                 url: window.location.href,
                 timestamp: Date.now(),
             });
         };
         // Click events
-        document.addEventListener('click', (event) => captureInteraction('click', event), true);
+        document.addEventListener("click", (event) => captureInteraction("click", event), true);
         // Scroll events (throttled)
         let scrollTimeout;
-        document.addEventListener('scroll', () => {
+        document.addEventListener("scroll", () => {
             clearTimeout(scrollTimeout);
             scrollTimeout = window.setTimeout(() => {
-                captureInteraction('scroll', new Event('scroll'));
+                captureInteraction("scroll", new Event("scroll"));
             }, 100);
         }, true);
         // Focus/blur events
-        document.addEventListener('focus', (event) => captureInteraction('focus', event), true);
-        document.addEventListener('blur', (event) => captureInteraction('blur', event), true);
+        document.addEventListener("focus", (event) => captureInteraction("focus", event), true);
+        document.addEventListener("blur", (event) => captureInteraction("blur", event), true);
         // Keypress events (throttled and sanitized)
         let keypressTimeout;
-        document.addEventListener('keypress', (event) => {
+        document.addEventListener("keypress", (event) => {
             clearTimeout(keypressTimeout);
             keypressTimeout = window.setTimeout(() => {
-                captureInteraction('keypress', event);
+                captureInteraction("keypress", event);
             }, 100);
         }, true);
     }
@@ -184,7 +191,7 @@ class AutoInstrumentation {
                 const startTime = performance.now();
                 // Extract URL from different input types
                 let url;
-                if (typeof args[0] === 'string') {
+                if (typeof args[0] === "string") {
                     url = args[0];
                 }
                 else if (args[0] instanceof URL) {
@@ -202,7 +209,7 @@ class AutoInstrumentation {
                     method = args[0].method;
                 }
                 else {
-                    method = ((_a = args[1]) === null || _a === void 0 ? void 0 : _a.method) || 'GET';
+                    method = ((_a = args[1]) === null || _a === void 0 ? void 0 : _a.method) || "GET";
                 }
                 try {
                     const response = await this.originalFetch(...args);
@@ -216,21 +223,21 @@ class AutoInstrumentation {
                     };
                     // Smart log level based on status and performance
                     let level = types_1.LogLevel.DEBUG;
-                    let message = 'Network Request';
+                    let message = "Network Request";
                     if (response.status >= 500) {
                         level = types_1.LogLevel.ERROR;
-                        message = 'Server Error';
+                        message = "Server Error";
                     }
                     else if (response.status >= 400) {
                         level = types_1.LogLevel.WARN;
-                        message = 'Client Error';
+                        message = "Client Error";
                     }
                     else if (duration > 5000) {
                         level = types_1.LogLevel.WARN;
-                        message = 'Slow Network Request';
+                        message = "Slow Network Request";
                     }
                     this.logger._log(level, message, undefined, {
-                        eventType: 'network',
+                        eventType: "network",
                         network: networkRequest,
                         timestamp: Date.now(),
                     });
@@ -244,8 +251,8 @@ class AutoInstrumentation {
                         duration,
                         timestamp: Date.now(),
                     };
-                    this.logger._log(types_1.LogLevel.ERROR, 'Network Request Failed', error, {
-                        eventType: 'network',
+                    this.logger._log(types_1.LogLevel.ERROR, "Network Request Failed", error, {
+                        eventType: "network",
                         network: networkRequest,
                         timestamp: Date.now(),
                     });
@@ -263,13 +270,17 @@ class AutoInstrumentation {
             const originalXHRSend = this.originalXHRSend;
             const logger = this.logger;
             XHR.open = function (method, url, async, user, password) {
-                this._loggerData = { method, url, startTime: performance.now() };
+                this._loggerData = {
+                    method,
+                    url,
+                    startTime: performance.now(),
+                };
                 return originalXHROpen === null || originalXHROpen === void 0 ? void 0 : originalXHROpen.call(this, method, url, async === undefined ? true : async, user, password);
             };
             XHR.send = function (body) {
                 const data = this._loggerData;
                 if (data) {
-                    this.addEventListener('loadend', () => {
+                    this.addEventListener("loadend", () => {
                         const duration = performance.now() - data.startTime;
                         const networkRequest = {
                             url: (0, utils_1.sanitizeUrl)(data.url),
@@ -280,21 +291,21 @@ class AutoInstrumentation {
                         };
                         // Smart log level based on status and performance
                         let level = types_1.LogLevel.DEBUG;
-                        let message = 'Network Request';
+                        let message = "Network Request";
                         if (this.status >= 500) {
                             level = types_1.LogLevel.ERROR;
-                            message = 'Server Error';
+                            message = "Server Error";
                         }
                         else if (this.status >= 400) {
                             level = types_1.LogLevel.WARN;
-                            message = 'Client Error';
+                            message = "Client Error";
                         }
                         else if (duration > 5000) {
                             level = types_1.LogLevel.WARN;
-                            message = 'Slow Network Request';
+                            message = "Slow Network Request";
                         }
                         logger._log(level, message, undefined, {
-                            eventType: 'network',
+                            eventType: "network",
                             network: networkRequest,
                             timestamp: Date.now(),
                         });
@@ -309,9 +320,9 @@ class AutoInstrumentation {
         this.originalConsoleWarn = console.warn;
         console.error = (...args) => {
             var _a;
-            this.logger._log(types_1.LogLevel.ERROR, 'Console Error', undefined, {
-                eventType: 'console',
-                consoleArgs: args.map(arg => String(arg)),
+            this.logger._log(types_1.LogLevel.ERROR, "Console Error", undefined, {
+                eventType: "console",
+                consoleArgs: args.map((arg) => String(arg)),
                 url: window.location.href,
                 timestamp: Date.now(),
             });
@@ -319,9 +330,9 @@ class AutoInstrumentation {
         };
         console.warn = (...args) => {
             var _a;
-            this.logger._log(types_1.LogLevel.WARN, 'Console Warning', undefined, {
-                eventType: 'console',
-                consoleArgs: args.map(arg => String(arg)),
+            this.logger._log(types_1.LogLevel.WARN, "Console Warning", undefined, {
+                eventType: "console",
+                consoleArgs: args.map((arg) => String(arg)),
                 url: window.location.href,
                 timestamp: Date.now(),
             });
@@ -343,13 +354,13 @@ class AutoInstrumentation {
             setTimeout(() => this.capturePageView(), 0);
         };
         // Popstate events (back/forward)
-        window.addEventListener('popstate', () => {
+        window.addEventListener("popstate", () => {
             setTimeout(() => this.capturePageView(), 0);
         });
     }
     capturePageView() {
-        this.logger._log(types_1.LogLevel.INFO, 'Page View', undefined, {
-            eventType: 'pageview',
+        this.logger._log(types_1.LogLevel.INFO, "Page View", undefined, {
+            eventType: "pageview",
             url: window.location.href,
             referrer: document.referrer,
             title: document.title,

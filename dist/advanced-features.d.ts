@@ -11,7 +11,10 @@ export declare class RateLimiter {
     private events;
     private maxEvents;
     private timeWindow;
+    private cleanupInterval;
     constructor(maxEvents?: number, timeWindowMs?: number);
+    private cleanup;
+    destroy(): void;
     shouldAllow(eventKey: string): boolean;
 }
 export declare class SessionManager {

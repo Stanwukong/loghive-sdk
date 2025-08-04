@@ -1,3 +1,4 @@
+import { Monita } from "./logger";
 export declare class AutoInstrumentation {
     private logger;
     private originalFetch?;
@@ -6,7 +7,7 @@ export declare class AutoInstrumentation {
     private originalConsoleError?;
     private originalConsoleWarn?;
     private performanceObserver?;
-    constructor(logger: any);
+    constructor(logger: Monita);
     init(config: {
         errors?: boolean;
         performance?: boolean;

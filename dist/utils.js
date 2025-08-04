@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.isInBrowser = exports.sanitizeUrl = exports.getElementSelector = exports.shouldLog = exports.getExponentialBackoffDelay = exports.delay = void 0;
 exports.extractErrorDetails = extractErrorDetails;
-exports.isBrowser = isBrowser;
 exports.isNode = isNode;
 exports.getEnvironmentInfo = getEnvironmentInfo;
 exports.getCurrentUrl = getCurrentUrl;
@@ -129,12 +128,8 @@ function extractErrorDetails(error) {
         message: String(error)
     };
 }
-/**
- * Checks if we're running in a browser environment
- */
-function isBrowser() {
-    return typeof window !== 'undefined' && typeof window.document !== 'undefined';
-}
+// Alias for compatibility
+const isBrowser = exports.isInBrowser;
 /**
  * Checks if we're running in a Node.js environment
  */
