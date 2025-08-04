@@ -138,12 +138,8 @@ export function extractErrorDetails(error: any): {
   };
 }
 
-/**
- * Checks if we're running in a browser environment
- */
-export function isBrowser(): boolean {
-  return typeof window !== 'undefined' && typeof window.document !== 'undefined';
-}
+// Alias for compatibility
+const isBrowser = isInBrowser
 
 /**
  * Checks if we're running in a Node.js environment

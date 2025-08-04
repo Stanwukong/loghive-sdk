@@ -12,15 +12,15 @@ export class ContextManager {
 
   // Push context onto stack
   pushContext(context: Record<string, any>): void {
-    this.contextStack.push({ ...this.logger['_context'] });
-    this.logger.setContext(context);
+    this.contextStack.push(this.logger.getContext());
+    this.logger.setContext({ ...this.logger.getContext(), ...context });
   }
 
   // Pop context from stack
   popContext(): void {
     const previousContext = this.contextStack.pop();
     if (previousContext) {
-      this.logger['_context'] = previousContext;
+      this.logger.setContext(previousContext)
     }
   }
 
@@ -40,10 +40,35 @@ export class RateLimiter {
   private events: Map<string, number[]> = new Map();
   private maxEvents: number;
   private timeWindow: number;
+  private cleanupInterval: ReturnType<typeof setInterval> | null = null
 
   constructor(maxEvents: number = 10, timeWindowMs: number = 60000) {
     this.maxEvents = maxEvents;
     this.timeWindow = timeWindowMs;
+
+    // Periodic cleanup to prevent memory leaks
+    this.cleanupInterval = setInterval(() => {
+      this.cleanup();
+    }, timeWindowMs)
+  }
+
+  private cleanup(): void {
+    const now = Date.now();
+    for (const [key, events] of this.events.entries()) {
+      const recentEvents = events.filter(time => now - time < this.timeWindow);
+      if (recentEvents.length === 0) {
+        this.events.delete(key)
+      } else {
+        this.events.set(key, recentEvents)
+      }
+    }
+  }
+
+  public destroy(): void {
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+      this.cleanupInterval = null
+    }
   }
 
   shouldAllow(eventKey: string): boolean {

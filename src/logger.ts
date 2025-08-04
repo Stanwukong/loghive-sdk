@@ -17,7 +17,7 @@ export class Monita {
   constructor(config: LoggerConfig) {
     // Apply default values to the configuration
     this._config = {
-      endpoint: 'http://localhost:3000/api/v1',
+      endpoint: 'https://logger-back.vercel.app/api/v1',
       minLogLevel: LogLevel.INFO,
       batchSize: 10,
       flushIntervalMs: 5000,
@@ -35,7 +35,7 @@ export class Monita {
         networkRequests: true,
         consoleMessages: false,
         pageViews: true,
-        ...config.autoCapture,
+        ...(config.autoCapture || {}),
       },
     };
 
@@ -47,7 +47,13 @@ export class Monita {
       throw new Error('Monita: Project ID is required.');
     }
 
-    // Create Axios instance
+    // Axios instance creation with error handling
+    try {
+      if (typeof axios === 'undefined') {
+        throw new Error('Axios is not available in this environment')
+      }
+
+      // Create Axios instance
     this._axiosInstance = axios.create({
       timeout: 10000,
       headers: {
@@ -55,6 +61,12 @@ export class Monita {
         'X-API-Key': this._config.apiKey,
       },
     });
+    } catch (error) {
+      console.error('Monita: Failed to create HTTP client:', error)
+      throw new Error('Axios is not available in this environment')
+    } 
+
+    
 
     // Initialize auto-instrumentation
     this._autoInstrumentation = new AutoInstrumentation(this);
@@ -114,6 +126,10 @@ export class Monita {
 
   public setContext(context: Record<string, any>): void {
     this._context = { ...this._context, ...context };
+  }
+
+  public getContext(): Record<string, any> {
+    return { ...this._context }
   }
 
   public _log(level: LogLevel, message: string, error?: Error, data?: Record<string, any>): void {

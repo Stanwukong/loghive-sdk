@@ -1,6 +1,6 @@
 # Monita SDK
 
-A powerful, easy-to-use TypeScript SDK for sending application logs to your monita logging platform. Perfect for monitoring, debugging, and tracking your application's behavior in real-time.
+A powerful, easy-to-use TypeScript SDK for sending application logs to the LogHive logging platform. Features automatic instrumentation, smart log levels, performance monitoring, and comprehensive framework integrations for real-time application monitoring and debugging.
 
 ## 🚀 Quick Start
 
@@ -19,7 +19,6 @@ import { Monita } from 'monita-sdk';
 const logger = new Monita({
   apiKey: 'your-api-key-here',
   projectId: 'your-project-id-here',
-  endpoint: 'https://your-logging-platform.com/api/v1'
 });
 
 // Start logging!
@@ -32,6 +31,7 @@ logger.error('Something went wrong', new Error('Database connection failed'));
 - [Installation](#installation)
 - [Configuration](#configuration)
 - [Basic Logging](#basic-logging)
+- [Auto-Instrumentation](#)
 - [Advanced Features](#advanced-features)
 - [Error Handling](#error-handling)
 - [Best Practices](#best-practices)

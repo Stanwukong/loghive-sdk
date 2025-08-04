@@ -1,5 +1,5 @@
 {
-  "name": "loghive-sdk",
+  "name": "monita-sdk",
   "version": "2.2.1",
   "description": "An SDK for the LogHive platform.",
   "main": "dist/index.js",
