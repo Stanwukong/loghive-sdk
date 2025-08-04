@@ -1,13 +1,7 @@
 "use strict";
-/**
- * @file src/types.ts
- * @description Defines the core types and interfaces for the Monita SDK.
- */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.LogLevel = void 0;
-/**
- * Enum for supported log levels.
- */
+// src/types.ts
 var LogLevel;
 (function (LogLevel) {
     LogLevel["TRACE"] = "trace";

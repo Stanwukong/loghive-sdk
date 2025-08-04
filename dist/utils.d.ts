@@ -1,36 +1,65 @@
-/**
- * @file src/utils.ts
- * @description Contains utility functions for the Monita SDK.
- */
 import { LogLevel } from './types';
-/**
- * Delays execution for a specified number of milliseconds.
- * @param ms The number of milliseconds to wait.
- * @returns A Promise that resolves after the specified delay.
- */
 export declare const delay: (ms: number) => Promise<void>;
-/**
- * Calculates the delay for exponential backoff with jitter.
- * @param retryCount The current retry attempt count (0-indexed).
- * @param initialDelayMs The initial delay in milliseconds.
- * @param maxDelayMs The maximum delay in milliseconds.
- * @returns The calculated delay for the current retry attempt.
- */
 export declare const getExponentialBackoffDelay: (retryCount: number, initialDelayMs: number, maxDelayMs?: number) => number;
-/**
- * Determines if a given log level should be processed based on the minimum log level.
- * @param currentLevel The level of the log being considered.
- * @param minLevel The minimum level configured for the logger.
- * @returns True if the current level is at or above the minimum level, false otherwise.
- */
 export declare const shouldLog: (currentLevel: LogLevel, minLevel: LogLevel) => boolean;
+export declare const getElementSelector: (element: Element) => string;
+export declare const sanitizeUrl: (url: string) => string;
+export declare const isInBrowser: () => boolean;
 /**
- * Extracts relevant information from an Error object.
- * @param error The Error object.
- * @returns An object containing the error's name, message, and stack trace.
+ * Extracts error details from various error types
+ * Compatible with both browser and Node.js environments
  */
-export declare const extractErrorDetails: (error: Error) => {
+export declare function extractErrorDetails(error: any): {
     name: string;
     message: string;
     stack?: string;
+    url?: string;
+    lineNumber?: number;
+    columnNumber?: number;
 };
+/**
+ * Checks if we're running in a browser environment
+ */
+export declare function isBrowser(): boolean;
+/**
+ * Checks if we're running in a Node.js environment
+ */
+export declare function isNode(): boolean;
+/**
+ * Gets environment-specific information
+ */
+export declare function getEnvironmentInfo(): {
+    runtime: 'browser' | 'node' | 'unknown';
+    version?: string;
+    userAgent?: string;
+};
+/**
+ * Safely gets the current URL
+ * Returns undefined in Node.js environments
+ */
+export declare function getCurrentUrl(): string | undefined;
+/**
+ * Safely gets the referrer
+ * Returns undefined in Node.js environments
+ */
+export declare function getReferrer(): string | undefined;
+/**
+ * Generates a timestamp in ISO format
+ */
+export declare function getTimestamp(): string;
+/**
+ * Safely stringifies an object, handling circular references
+ */
+export declare function safeStringify(obj: any, space?: number): string;
+/**
+ * Validates if a string is a valid UUID
+ */
+export declare function isValidUUID(uuid: string): boolean;
+/**
+ * Truncates a string to a maximum length
+ */
+export declare function truncateString(str: string, maxLength: number): string;
+/**
+ * Debounce function for performance optimization
+ */
+export declare function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (...args: Parameters<T>) => void;

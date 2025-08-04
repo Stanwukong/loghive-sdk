@@ -1,7 +1,6 @@
-/**
- * @file src/index.ts
- * @description Main entry point for the Monita SDK.
- * Exports the Monita class and related types.
- */
+import { Monita } from './logger';
+import { LoggerConfig } from './types';
 export { Monita } from './logger';
-export { LoggerConfig, LogEntry, LogLevel } from './types';
+export { LoggerConfig, LogEntry, LogLevel, PerformanceEntry, UserInteraction, NetworkRequest } from './types';
+export { AutoInstrumentation } from './auto-instrumentation';
+export declare const createLogger: (config: LoggerConfig) => Monita;
