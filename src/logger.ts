@@ -266,9 +266,7 @@ export class Monita {
         
         if (axiosError.response) {
           console.error(
-            `Monita: API Error ${axiosError.response.status} on attempt ${attempt + 1}:`,
-            axiosError.response.data
-          );
+            `Monita: API Error ${axiosError.response.status} on attempt ${attempt + 1}`);
           
           if (axiosError.response.status >= 400 && axiosError.response.status < 500) {
             if (axiosError.response.status === 401 || axiosError.response.status === 403) {
