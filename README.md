@@ -7,13 +7,13 @@ A powerful, intelligent TypeScript SDK for sending application logs to your moni
 ### Installation
 
 ```bash
-npm install monita-sdk
+npm install monita
 ```
 
 ### Basic Usage
 
 ```typescript
-import { Monita } from 'monita-sdk';
+import { Monita } from 'monita';
 
 // Initialize the logger
 const logger = new Monita({
@@ -108,8 +108,8 @@ Enable debug logging to see what's happening:
 ### E-commerce Application
 
 ```typescript
-import { Monita, LogLevel } from 'monita-sdk';
-import { createEnhancedLogger } from 'monita-sdk/advanced-features';
+import { Monita, LogLevel } from 'monita';
+import { createEnhancedLogger } from 'monita/advanced-features';
 
 // Enhanced logger with all features
 const { 
@@ -326,7 +326,7 @@ function ProductPage({ productId, categoryId }: { productId: string, categoryId:
 
 ```typescript
 // shared/logger.ts
-import { Monita } from 'monita-sdk';
+import { Monita } from 'monita';
 
 export const createServiceLogger = (serviceName: string) => {
   return new Monita({
@@ -541,8 +541,8 @@ export const requestLoggingMiddleware = (req: any, res: any, next: any) => {
 
 ```typescript
 // monitoring/dashboard.ts
-import { Monita } from 'monita-sdk';
-import { createEnhancedLogger } from 'monita-sdk/advanced-features';
+import { Monita } from 'monita';
+import { createEnhancedLogger } from 'monita/advanced-features';
 
 const { logger, eventTracker, performanceMonitor } = createEnhancedLogger({
   apiKey: process.env.MONITA_API_KEY!,
@@ -701,7 +701,7 @@ monitor.startMonitoring();
 
 1. **Install the SDK**
    ```bash
-   npm install monita-sdk
+   npm install monita
    ```
 
 2. **Get your credentials**
@@ -711,7 +711,7 @@ monitor.startMonitoring();
 
 3. **Basic setup**
    ```typescript
-   import { Monita } from 'monita-sdk';
+   import { Monita } from 'monita';
    
    const logger = new Monita({
      apiKey: process.env.MONITA_API_KEY!,
@@ -853,7 +853,7 @@ const logger = new Monita({
 The SDK supports 6 log levels (from lowest to highest priority):
 
 ```typescript
-import { LogLevel } from 'monita-sdk';
+import { LogLevel } from 'monita';
 
 logger.trace('Very detailed debug information');    // TRACE
 logger.debug('Debug information for developers');   // DEBUG  
@@ -1024,7 +1024,7 @@ The SDK automatically determines appropriate log levels based on event severity:
 
 ```typescript
 // logger.ts
-import { Monita, LogLevel } from 'monita-sdk';
+import { Monita, LogLevel } from 'monita';
 
 export const logger = new Monita({
   apiKey: process.env.REACT_APP_MONITA_API_KEY!,
@@ -1078,7 +1078,7 @@ function App() {
 
 ```typescript
 // lib/logger.ts
-import { Monita } from 'monita-sdk';
+import { Monita } from 'monita';
 
 export const logger = new Monita({
   apiKey: process.env.NEXT_PUBLIC_MONITA_API_KEY!,
@@ -1158,7 +1158,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
 ```typescript
 import express from 'express';
-import { Monita, LogLevel } from 'monita-sdk';
+import { Monita, LogLevel } from 'monita';
 
 const app = express();
 const logger = new Monita({
@@ -1223,7 +1223,7 @@ process.on('SIGTERM', async () => {
 
 ```typescript
 // plugins/logger.ts
-import { Monita } from 'monita-sdk';
+import { Monita } from 'monita';
 
 export const logger = new Monita({
   apiKey: process.env.VUE_APP_MONITA_API_KEY!,
@@ -1279,7 +1279,7 @@ app.mount('#app');
 
 ```typescript
 // logger.ts
-import { Monita } from 'monita-sdk';
+import { Monita } from 'monita';
 
 export const logger = new Monita({
   apiKey: process.env.MONITA_API_KEY!,
@@ -1335,7 +1335,7 @@ process.on('unhandledRejection', (reason, promise) => {
 ### Context Management
 
 ```typescript
-import { ContextManager } from 'monita-sdk/advanced-features';
+import { ContextManager } from 'monita/advanced-features';
 
 const contextManager = new ContextManager(logger);
 
@@ -1361,7 +1361,7 @@ contextManager.popContext(); // Removes requestId
 ### Session Management
 
 ```typescript
-import { SessionManager } from 'monita-sdk/advanced-features';
+import { SessionManager } from 'monita/advanced-features';
 
 const sessionManager = new SessionManager(logger);
 
@@ -1378,7 +1378,7 @@ sessionManager.endSession();
 ### Custom Event Tracking
 
 ```typescript
-import { CustomEventTracker } from 'monita-sdk/advanced-features';
+import { CustomEventTracker } from 'monita/advanced-features';
 
 const eventTracker = new CustomEventTracker(logger);
 
@@ -1409,7 +1409,7 @@ eventTracker.trackFunnelStep('checkout', 'payment_info', true, {
 ### Performance Monitoring Extensions
 
 ```typescript
-import { PerformanceMonitor } from 'monita-sdk/advanced-features';
+import { PerformanceMonitor } from 'monita/advanced-features';
 
 const perfMonitor = new PerformanceMonitor(logger);
 
@@ -1427,7 +1427,7 @@ perfMonitor.logWebVital('CLS', 0.1);  // Cumulative Layout Shift
 ### Feature Flag Integration
 
 ```typescript
-import { FeatureFlagLogger } from 'monita-sdk/advanced-features';
+import { FeatureFlagLogger } from 'monita/advanced-features';
 
 const flagLogger = new FeatureFlagLogger(logger);
 
@@ -1445,7 +1445,7 @@ flagLogger.logFlagImpact('new_checkout_flow', 'conversion_rate_increase', {
 ### A/B Test Integration
 
 ```typescript
-import { ABTestLogger } from 'monita-sdk/advanced-features';
+import { ABTestLogger } from 'monita/advanced-features';
 
 const abTestLogger = new ABTestLogger(logger);
 
@@ -1459,7 +1459,7 @@ abTestLogger.logConversion('checkout_button_color', 'purchase', 99.99);
 ### Rate Limiting
 
 ```typescript
-import { RateLimiter } from 'monita-sdk/advanced-features';
+import { RateLimiter } from 'monita/advanced-features';
 
 const rateLimiter = new RateLimiter(10, 60000); // 10 events per minute
 
@@ -1514,7 +1514,7 @@ logger.captureException(new Error('Critical failure')); // ERROR
 
 ```typescript
 // logger.ts
-import { Monita, LogLevel } from 'monita-sdk';
+import { Monita, LogLevel } from 'monita';
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 const isProduction = process.env.NODE_ENV === 'production';
@@ -1575,7 +1575,7 @@ logger.info('File uploaded', {
 ### 3. Enhanced Factory Function
 
 ```typescript
-import { createEnhancedLogger } from 'monita-sdk/advanced-features';
+import { createEnhancedLogger } from 'monita/advanced-features';
 
 export const { 
   logger, 
