@@ -1,6 +1,6 @@
 {
   "name": "monita",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "This is a Node.js SDK that sends metrics to the LogHive platform.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
