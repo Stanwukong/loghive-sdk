@@ -8,6 +8,7 @@ export declare class Monita {
     private _isShuttingDown;
     private _axiosInstance;
     private _autoInstrumentation;
+    private _dataSanitizer;
     constructor(config: LoggerConfig);
     init(): void;
     setContext(context: Record<string, any>): void;
@@ -25,5 +26,12 @@ export declare class Monita {
     flush(): Promise<void>;
     private _sendLogs;
     private _sendSingleLog;
+    getSanitizationConfig(): import('./data-sanitizer').SanitizationConfig;
+    updateSanitizationConfig(config: Partial<import('./data-sanitizer').SanitizationConfig>): void;
+    getAuditTrail(): import('./data-sanitizer').AuditEntry[];
+    clearAuditTrail(): void;
+    cleanupExpiredData(): number;
+    addCustomSanitizationRule(rule: import('./data-sanitizer').SanitizationRule): void;
+    removeCustomSanitizationRule(description: string): boolean;
     shutdown(): Promise<void>;
 }

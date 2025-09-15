@@ -1,3 +1,4 @@
+import { SanitizationConfig } from "./data-sanitizer";
 export declare enum LogLevel {
     TRACE = "trace",
     DEBUG = "debug",
@@ -39,6 +40,10 @@ export interface LoggerConfig {
                 info?: LogLevel;
             };
         };
+    };
+    sanitization?: {
+        enabled?: boolean;
+        config?: SanitizationConfig;
     };
 }
 export interface LogEntry {

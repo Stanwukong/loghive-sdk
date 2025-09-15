@@ -9,8 +9,10 @@ const axios_1 = __importDefault(require("axios"));
 const types_1 = require("./types");
 const utils_1 = require("./utils");
 const auto_instrumentation_1 = require("./auto-instrumentation");
+const data_sanitizer_1 = require("./data-sanitizer");
 class Monita {
     constructor(config) {
+        var _a;
         this._logBuffer = [];
         this._context = {};
         this._flushTimer = null;
@@ -37,6 +39,11 @@ class Monita {
                 consoleMessages: false,
                 pageViews: true,
                 ...(config.autoCapture || {}),
+            },
+            // Merge sanitization with defaults
+            sanitization: {
+                enabled: true,
+                ...(config.sanitization || {}),
             },
         };
         // Validate required configuration
@@ -66,6 +73,9 @@ class Monita {
         }
         // Initialize auto-instrumentation
         this._autoInstrumentation = new auto_instrumentation_1.AutoInstrumentation(this);
+        // Initialize data sanitizer
+        const sanitizationConfig = ((_a = config.sanitization) === null || _a === void 0 ? void 0 : _a.config) || {};
+        this._dataSanitizer = (0, data_sanitizer_1.createDataSanitizer)(sanitizationConfig);
         this.init();
     }
     init() {
@@ -118,6 +128,7 @@ class Monita {
         return { ...this._context };
     }
     _log(level, message, error, data) {
+        var _a;
         if (this._isShuttingDown) {
             console.warn(`Monita: Attempted to log "${message}" during shutdown. Log ignored.`);
             return;
@@ -142,7 +153,11 @@ class Monita {
             logEntry.url = window.location.href;
             logEntry.referrer = document.referrer;
         }
-        this._logBuffer.push(logEntry);
+        // Apply data sanitization if enabled
+        const sanitizedEntry = ((_a = this._config.sanitization) === null || _a === void 0 ? void 0 : _a.enabled) !== false
+            ? this._dataSanitizer.sanitizeLogEntry(logEntry)
+            : logEntry;
+        this._logBuffer.push(sanitizedEntry);
         if (this._logBuffer.length >= this._config.batchSize) {
             this.flush();
         }
@@ -231,7 +246,7 @@ class Monita {
             catch (error) {
                 const axiosError = error;
                 if (axiosError.response) {
-                    console.error(`Monita: API Error ${axiosError.response.status} on attempt ${attempt + 1}`);
+                    console.error(`Monita: API Error ${axiosError.response.config.url} on attempt ${attempt + 1}`);
                     if (axiosError.response.status >= 400 && axiosError.response.status < 500) {
                         if (axiosError.response.status === 401 || axiosError.response.status === 403) {
                             console.error('Monita: Authentication/Authorization failed. Check API Key.');
@@ -255,12 +270,36 @@ class Monita {
         }
         throw new Error(`Monita: Failed to send log after ${this._config.maxRetries} retries.`);
     }
+    // Data sanitization methods
+    getSanitizationConfig() {
+        return this._dataSanitizer.getConfig();
+    }
+    updateSanitizationConfig(config) {
+        this._dataSanitizer.updateConfig(config);
+    }
+    getAuditTrail() {
+        return this._dataSanitizer.getAuditTrail();
+    }
+    clearAuditTrail() {
+        this._dataSanitizer.clearAuditTrail();
+    }
+    cleanupExpiredData() {
+        return this._dataSanitizer.cleanupExpiredData();
+    }
+    addCustomSanitizationRule(rule) {
+        this._dataSanitizer.addCustomRule(rule);
+    }
+    removeCustomSanitizationRule(description) {
+        return this._dataSanitizer.removeCustomRule(description);
+    }
     async shutdown() {
         this._isShuttingDown = true;
         if (this._flushTimer) {
             clearInterval(this._flushTimer);
             this._flushTimer = null;
         }
+        // Cleanup data sanitizer
+        this.cleanupExpiredData();
         // Cleanup auto-instrumentation
         this._autoInstrumentation.destroy();
         console.log('Monita: Shutting down. Flushing remaining logs...');
