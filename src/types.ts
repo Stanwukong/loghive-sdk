@@ -1,3 +1,5 @@
+import { SanitizationConfig } from "./data-sanitizer";
+
 // src/types.ts
 export enum LogLevel {
   TRACE = "trace",
@@ -43,6 +45,11 @@ export interface LoggerConfig {
         info?: LogLevel;
       };
     };
+  };
+  // Data sanitization options
+  sanitization?: {
+    enabled?: boolean;
+    config?: SanitizationConfig;
   };
 }
 

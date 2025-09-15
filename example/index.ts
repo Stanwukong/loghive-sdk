@@ -21,11 +21,9 @@ import { Monita, LogLevel } from "../src"; // Adjust path if running from differ
 dotenv.config();
 
 // --- Configuration ---
-const API_KEY =
-  process.env.REMOTE_LOGGER_API_KEY || "60e1ba75-a67e-480a-8b9c-1e615ce3a987";
-const PROJECT_ID =
-  process.env.REMOTE_LOGGER_PROJECT_ID || "6884171e07ebd35a3e34a5ba";
-const ENDPOINT = process.env.REMOTE_LOGGER_ENDPOINT;
+const API_KEY = process.env.REMOTE_LOGGER_API_KEY || "your-api-key";
+const PROJECT_ID = process.env.REMOTE_LOGGER_PROJECT_ID || "your-project-id";
+const ENDPOINT = process.env.REMOTE_LOGGER_ENDPOINT || "https://loghive-server.vercel.app/api/v1";
 
 if (!API_KEY || !PROJECT_ID || !ENDPOINT) {
   console.error(

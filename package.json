@@ -1,12 +1,12 @@
 {
   "name": "monita",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "This is a Node.js SDK that sends metrics to the LogHive platform.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "start:example": "ts-node example/index.ts",
+    "start:example": "ts-node example/data-sanitization-example.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "files": [

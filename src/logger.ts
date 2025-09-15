@@ -3,6 +3,7 @@ import axios, { AxiosInstance, AxiosError } from 'axios';
 import { LoggerConfig, LogEntry, LogLevel } from './types';
 import { delay, getExponentialBackoffDelay, shouldLog, extractErrorDetails, isInBrowser } from './utils';
 import { AutoInstrumentation } from './auto-instrumentation';
+import { DataSanitizer, SanitizationConfig, createDataSanitizer } from './data-sanitizer';
 
 export class Monita {
   private _config: Required<LoggerConfig>;
@@ -13,6 +14,7 @@ export class Monita {
   private _isShuttingDown: boolean = false;
   private _axiosInstance: AxiosInstance;
   private _autoInstrumentation: AutoInstrumentation;
+  private _dataSanitizer: DataSanitizer;
 
   constructor(config: LoggerConfig) {
     // Apply default values to the configuration
@@ -37,7 +39,12 @@ export class Monita {
         pageViews: true,
         ...(config.autoCapture || {}),
       },
-    };
+      // Merge sanitization with defaults
+      sanitization: {
+        enabled: true,
+        ...(config.sanitization || {}),
+      },
+    } as Required<LoggerConfig>;
 
     // Validate required configuration
     if (!this._config.apiKey) {
@@ -70,6 +77,10 @@ export class Monita {
 
     // Initialize auto-instrumentation
     this._autoInstrumentation = new AutoInstrumentation(this);
+
+    // Initialize data sanitizer
+    const sanitizationConfig = config.sanitization?.config || {};
+    this._dataSanitizer = createDataSanitizer(sanitizationConfig);
 
     this.init();
   }
@@ -161,7 +172,12 @@ export class Monita {
       logEntry.referrer = document.referrer;
     }
 
-    this._logBuffer.push(logEntry);
+    // Apply data sanitization if enabled
+    const sanitizedEntry = this._config.sanitization?.enabled !== false 
+      ? this._dataSanitizer.sanitizeLogEntry(logEntry)
+      : logEntry;
+
+    this._logBuffer.push(sanitizedEntry);
 
     if (this._logBuffer.length >= this._config.batchSize) {
       this.flush();
@@ -266,7 +282,7 @@ export class Monita {
         
         if (axiosError.response) {
           console.error(
-            `Monita: API Error ${axiosError.response.status} on attempt ${attempt + 1}`);
+            `Monita: API Error ${axiosError.response.config.url} on attempt ${attempt + 1}`);
           
           if (axiosError.response.status >= 400 && axiosError.response.status < 500) {
             if (axiosError.response.status === 401 || axiosError.response.status === 403) {
@@ -292,6 +308,35 @@ export class Monita {
     throw new Error(`Monita: Failed to send log after ${this._config.maxRetries} retries.`);
   }
 
+  // Data sanitization methods
+  public getSanitizationConfig(): import('./data-sanitizer').SanitizationConfig {
+    return this._dataSanitizer.getConfig();
+  }
+
+  public updateSanitizationConfig(config: Partial<import('./data-sanitizer').SanitizationConfig>): void {
+    this._dataSanitizer.updateConfig(config);
+  }
+
+  public getAuditTrail(): import('./data-sanitizer').AuditEntry[] {
+    return this._dataSanitizer.getAuditTrail();
+  }
+
+  public clearAuditTrail(): void {
+    this._dataSanitizer.clearAuditTrail();
+  }
+
+  public cleanupExpiredData(): number {
+    return this._dataSanitizer.cleanupExpiredData();
+  }
+
+  public addCustomSanitizationRule(rule: import('./data-sanitizer').SanitizationRule): void {
+    this._dataSanitizer.addCustomRule(rule);
+  }
+
+  public removeCustomSanitizationRule(description: string): boolean {
+    return this._dataSanitizer.removeCustomRule(description);
+  }
+
   public async shutdown(): Promise<void> {
     this._isShuttingDown = true;
     
@@ -299,6 +344,9 @@ export class Monita {
       clearInterval(this._flushTimer);
       this._flushTimer = null;
     }
+
+    // Cleanup data sanitizer
+    this.cleanupExpiredData();
 
     // Cleanup auto-instrumentation
     this._autoInstrumentation.destroy();
