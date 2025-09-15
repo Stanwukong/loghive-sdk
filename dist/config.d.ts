@@ -1,1 +1,1 @@
-export declare const DEFAULT_ENDPOINT = "https://logger-back.vercel.app/api/v1";
+export declare const DEFAULT_ENDPOINT = "https://loghive-server.vercel.app/api/v1";

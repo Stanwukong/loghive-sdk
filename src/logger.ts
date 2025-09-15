@@ -17,7 +17,7 @@ export class Monita {
   constructor(config: LoggerConfig) {
     // Apply default values to the configuration
     this._config = {
-      endpoint: 'http://localhost:5000/api/v1',
+      endpoint: 'https://loghive-server.vercel.app/api/v1',
       minLogLevel: LogLevel.INFO,
       batchSize: 10,
       flushIntervalMs: 5000,
