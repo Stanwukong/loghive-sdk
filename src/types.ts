@@ -22,6 +22,8 @@ export interface LoggerConfig {
   environment?: string;
   serviceName?: string;
   serviceVersion?: string;
+  enableRemoteConfig?: boolean;
+  configRefreshIntervalMs?: number;
   // Auto-instrumentation options
   autoCapture?: {
     errors?: boolean;
@@ -72,7 +74,13 @@ export interface LogEntry {
   context?: Record<string, any>;
   metadata?: any;
   // Event-specific fields
-  eventType?: 'error' | 'performance' | 'interaction' | 'network' | 'console' | 'pageview';
+  eventType?:
+    | "error"
+    | "performance"
+    | "interaction"
+    | "network"
+    | "console"
+    | "pageview";
   userAgent?: string;
   url?: string;
   referrer?: string;
@@ -87,7 +95,7 @@ export interface PerformanceEntry {
 }
 
 export interface UserInteraction {
-  type: 'click' | 'scroll' | 'keypress' | 'focus' | 'blur';
+  type: "click" | "scroll" | "keypress" | "focus" | "blur";
   target: string;
   timestamp: number;
   coordinates?: { x: number; y: number };
