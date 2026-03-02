@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Build output (uncomment if you want to ignore dist)
+# dist/
+
+# Test environments
+test-env/
+
+# Environment files
+.env
+.env.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
