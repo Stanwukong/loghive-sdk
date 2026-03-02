@@ -1,15 +1,19 @@
 import { LoggerConfig, LogLevel } from './types';
 export declare class Monita {
+    private static readonly MAX_BUFFER_SIZE;
     private _config;
     private _logBuffer;
     private _context;
     private _flushTimer;
     private _isFlushing;
     private _isShuttingDown;
+    private _initialized;
     private _axiosInstance;
     private _autoInstrumentation;
     private _dataSanitizer;
+    private _beforeUnloadHandler;
     constructor(config: LoggerConfig);
+    isInitialized(): boolean;
     init(): void;
     setContext(context: Record<string, any>): void;
     getContext(): Record<string, any>;

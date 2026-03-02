@@ -12,10 +12,11 @@ export {
   NetworkRequest 
 } from './types';
 export { AutoInstrumentation } from './auto-instrumentation';
-export { 
-  DataSanitizer, 
-  createDataSanitizer, 
+export {
+  DataSanitizer,
+  createDataSanitizer,
   SANITIZATION_PRESETS,
+  PII_PATTERNS,
   type SanitizationConfig,
   type SanitizationRule,
   type RetentionPolicy,

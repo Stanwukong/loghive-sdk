@@ -6,15 +6,19 @@ import { AutoInstrumentation } from './auto-instrumentation';
 import { DataSanitizer, SanitizationConfig, createDataSanitizer } from './data-sanitizer';
 
 export class Monita {
+  private static readonly MAX_BUFFER_SIZE = 1000;
+
   private _config: Required<LoggerConfig>;
   private _logBuffer: LogEntry[] = [];
   private _context: Record<string, any> = {};
   private _flushTimer: ReturnType<typeof setInterval> | null = null;
   private _isFlushing: boolean = false;
   private _isShuttingDown: boolean = false;
+  private _initialized: boolean = false;
   private _axiosInstance: AxiosInstance;
   private _autoInstrumentation: AutoInstrumentation;
   private _dataSanitizer: DataSanitizer;
+  private _beforeUnloadHandler: (() => void) | null = null;
 
   constructor(config: LoggerConfig) {
     // Apply default values to the configuration
@@ -85,11 +89,22 @@ export class Monita {
     this.init();
   }
 
+  public isInitialized(): boolean {
+    return this._initialized;
+  }
+
   public init(): void {
+    if (this._initialized) {
+      console.warn('Monita: Already initialized. Call shutdown() first to re-initialize.');
+      return;
+    }
+
+    this._initialized = true;
+
     if (this._flushTimer) {
       clearInterval(this._flushTimer);
     }
-    
+
     this._flushTimer = setInterval(() => {
       this.flush();
     }, this._config.flushIntervalMs);
@@ -97,7 +112,7 @@ export class Monita {
     // Initialize auto-instrumentation if in browser
     if (isInBrowser()) {
       this._autoInstrumentation.init(this._config.autoCapture);
-      
+
       // Add browser context
       this.setContext({
         userAgent: navigator.userAgent,
@@ -106,10 +121,11 @@ export class Monita {
         timestamp: new Date().toISOString(),
       });
 
-      // Add beforeunload handler to flush logs
-      window.addEventListener('beforeunload', () => {
+      // Add beforeunload handler to flush logs (store reference for cleanup)
+      this._beforeUnloadHandler = () => {
         this.flush();
-      });
+      };
+      window.addEventListener('beforeunload', this._beforeUnloadHandler);
     } else {
       // Add Node.js context
       this.setContext({
@@ -245,6 +261,12 @@ export class Monita {
     } catch (err) {
       console.error('Monita: Failed to send logs after retries. Re-adding to buffer.', err);
       this._logBuffer.unshift(...logsToSend);
+      // Prevent unbounded buffer growth
+      if (this._logBuffer.length > Monita.MAX_BUFFER_SIZE) {
+        const dropped = this._logBuffer.length - Monita.MAX_BUFFER_SIZE;
+        this._logBuffer = this._logBuffer.slice(0, Monita.MAX_BUFFER_SIZE);
+        console.warn(`Monita: Dropped ${dropped} oldest logs due to buffer overflow.`);
+      }
     } finally {
       this._isFlushing = false;
     }
@@ -259,7 +281,7 @@ export class Monita {
     
     try {
       await Promise.all(sendPromises);
-      console.log(`Monita: Successfully sent ${logs.length} logs.`);
+      // Silent in production — only log in debug mode
     } catch (error) {
       throw error;
     }

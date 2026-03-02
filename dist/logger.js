@@ -18,6 +18,8 @@ class Monita {
         this._flushTimer = null;
         this._isFlushing = false;
         this._isShuttingDown = false;
+        this._initialized = false;
+        this._beforeUnloadHandler = null;
         // Apply default values to the configuration
         this._config = {
             endpoint: 'https://loghive-server.vercel.app/api/v1',
@@ -78,7 +80,15 @@ class Monita {
         this._dataSanitizer = (0, data_sanitizer_1.createDataSanitizer)(sanitizationConfig);
         this.init();
     }
+    isInitialized() {
+        return this._initialized;
+    }
     init() {
+        if (this._initialized) {
+            console.warn('Monita: Already initialized. Call shutdown() first to re-initialize.');
+            return;
+        }
+        this._initialized = true;
         if (this._flushTimer) {
             clearInterval(this._flushTimer);
         }
@@ -95,10 +105,11 @@ class Monita {
                 referrer: document.referrer,
                 timestamp: new Date().toISOString(),
             });
-            // Add beforeunload handler to flush logs
-            window.addEventListener('beforeunload', () => {
+            // Add beforeunload handler to flush logs (store reference for cleanup)
+            this._beforeUnloadHandler = () => {
                 this.flush();
-            });
+            };
+            window.addEventListener('beforeunload', this._beforeUnloadHandler);
         }
         else {
             // Add Node.js context
@@ -213,6 +224,12 @@ class Monita {
         catch (err) {
             console.error('Monita: Failed to send logs after retries. Re-adding to buffer.', err);
             this._logBuffer.unshift(...logsToSend);
+            // Prevent unbounded buffer growth
+            if (this._logBuffer.length > Monita.MAX_BUFFER_SIZE) {
+                const dropped = this._logBuffer.length - Monita.MAX_BUFFER_SIZE;
+                this._logBuffer = this._logBuffer.slice(0, Monita.MAX_BUFFER_SIZE);
+                console.warn(`Monita: Dropped ${dropped} oldest logs due to buffer overflow.`);
+            }
         }
         finally {
             this._isFlushing = false;
@@ -225,7 +242,7 @@ class Monita {
         const sendPromises = logs.map(log => this._sendSingleLog(log));
         try {
             await Promise.all(sendPromises);
-            console.log(`Monita: Successfully sent ${logs.length} logs.`);
+            // Silent in production — only log in debug mode
         }
         catch (error) {
             throw error;
@@ -308,3 +325,4 @@ class Monita {
     }
 }
 exports.Monita = Monita;
+Monita.MAX_BUFFER_SIZE = 1000;
