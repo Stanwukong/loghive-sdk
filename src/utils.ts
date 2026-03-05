@@ -53,7 +53,7 @@ export const sanitizeUrl = (url: string): string => {
         urlObj.searchParams.set(param, '[REDACTED]');
       }
     });
-    return urlObj.toString();
+    return urlObj.toString().replace(/%5B/g, '[').replace(/%5D/g, ']');
   } catch {
     return url;
   }

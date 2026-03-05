@@ -12,6 +12,7 @@ import {
   sanitizeUrl,
   isInBrowser,
 } from "./utils";
+import { BreadcrumbManager } from "./breadcrumb-manager";
 
 export class AutoInstrumentation {
   private logger: Monita;
@@ -21,9 +22,12 @@ export class AutoInstrumentation {
   private originalConsoleError?: typeof console.error;
   private originalConsoleWarn?: typeof console.warn;
   private performanceObserver?: PerformanceObserver;
+  private breadcrumbManager: BreadcrumbManager;
+  private webVitalObservers: PerformanceObserver[] = [];
 
   constructor(logger: Monita) {
     this.logger = logger;
+    this.breadcrumbManager = new BreadcrumbManager();
   }
 
   public init(config: {
@@ -51,6 +55,7 @@ export class AutoInstrumentation {
 
     if (config.performance) {
       this.setupPerformanceCapture();
+      this.setupWebVitalsCapture();
     }
 
     if (config.userInteractions) {
@@ -82,6 +87,8 @@ export class AutoInstrumentation {
         url: window.location.href,
         userAgent: navigator.userAgent,
         timestamp: Date.now(),
+        breadcrumbs: this.breadcrumbManager.getAll(),
+        environment: this.breadcrumbManager.captureEnvironment(),
       });
     });
 
@@ -106,6 +113,8 @@ export class AutoInstrumentation {
             url: window.location.href,
             userAgent: navigator.userAgent,
             timestamp: Date.now(),
+            breadcrumbs: this.breadcrumbManager.getAll(),
+            environment: this.breadcrumbManager.captureEnvironment(),
           }
         );
       }
@@ -226,7 +235,22 @@ export class AutoInstrumentation {
     // Click events
     document.addEventListener(
       "click",
-      (event) => captureInteraction("click", event),
+      (event) => {
+        const target = event.target as Element;
+        if (target) {
+          this.breadcrumbManager.add({
+            timestamp: Date.now(),
+            category: 'ui',
+            message: 'User click',
+            level: 'debug',
+            data: {
+              target: getElementSelector(target),
+              coordinates: { x: event.clientX, y: event.clientY },
+            },
+          });
+        }
+        captureInteraction("click", event);
+      },
       true
     );
 
@@ -323,6 +347,14 @@ export class AutoInstrumentation {
             message = "Slow Network Request";
           }
 
+          this.breadcrumbManager.add({
+            timestamp: Date.now(),
+            category: 'network',
+            message: 'Network Request',
+            level: response.status >= 400 ? 'error' : 'info',
+            data: { url: sanitizeUrl(url), method, status: response.status, duration },
+          });
+
           this.logger._log(level, message, undefined, {
             eventType: "network",
             network: networkRequest,
@@ -339,6 +371,14 @@ export class AutoInstrumentation {
             duration,
             timestamp: Date.now(),
           };
+
+          this.breadcrumbManager.add({
+            timestamp: Date.now(),
+            category: 'network',
+            message: 'Network Request Failed',
+            level: 'error',
+            data: { url: sanitizeUrl(url), method, duration },
+          });
 
           this.logger._log(
             LogLevel.ERROR,
@@ -366,6 +406,7 @@ export class AutoInstrumentation {
       const originalXHROpen = this.originalXHROpen;
       const originalXHRSend = this.originalXHRSend;
       const logger = this.logger;
+      const breadcrumbMgr = this.breadcrumbManager;
 
       XHR.open = function (
         method: string,
@@ -418,6 +459,14 @@ export class AutoInstrumentation {
               message = "Slow Network Request";
             }
 
+            breadcrumbMgr.add({
+              timestamp: Date.now(),
+              category: 'network',
+              message: 'Network Request',
+              level: this.status >= 400 ? 'error' : 'info',
+              data: { url: sanitizeUrl(data.url), method: data.method, status: this.status, duration },
+            });
+
             logger._log(level, message, undefined, {
               eventType: "network",
               network: networkRequest,
@@ -436,6 +485,14 @@ export class AutoInstrumentation {
     this.originalConsoleWarn = console.warn;
 
     console.error = (...args: any[]) => {
+      this.breadcrumbManager.add({
+        timestamp: Date.now(),
+        category: 'console',
+        message: 'Console Error',
+        level: 'error',
+        data: { args: args.map((arg) => String(arg)) },
+      });
+
       this.logger._log(LogLevel.ERROR, "Console Error", undefined, {
         eventType: "console",
         consoleArgs: args.map((arg) => String(arg)),
@@ -447,6 +504,14 @@ export class AutoInstrumentation {
     };
 
     console.warn = (...args: any[]) => {
+      this.breadcrumbManager.add({
+        timestamp: Date.now(),
+        category: 'console',
+        message: 'Console Warning',
+        level: 'warning',
+        data: { args: args.map((arg) => String(arg)) },
+      });
+
       this.logger._log(LogLevel.WARN, "Console Warning", undefined, {
         eventType: "console",
         consoleArgs: args.map((arg) => String(arg)),
@@ -483,6 +548,14 @@ export class AutoInstrumentation {
   }
 
   private capturePageView(): void {
+    this.breadcrumbManager.add({
+      timestamp: Date.now(),
+      category: 'navigation',
+      message: 'Page View',
+      level: 'info',
+      data: { url: window.location.href, title: document.title },
+    });
+
     this.logger._log(LogLevel.INFO, "Page View", undefined, {
       eventType: "pageview",
       url: window.location.href,
@@ -491,6 +564,88 @@ export class AutoInstrumentation {
       userAgent: navigator.userAgent,
       timestamp: Date.now(),
     });
+  }
+
+  private setupWebVitalsCapture(): void {
+    if (!("PerformanceObserver" in window)) {
+      return;
+    }
+
+    // LCP (Largest Contentful Paint)
+    try {
+      const lcpObserver = new PerformanceObserver((list) => {
+        const entries = list.getEntries();
+        const lastEntry = entries[entries.length - 1];
+        const value = lastEntry.startTime;
+        const rating = this.getVitalRating('LCP', value);
+        let level = LogLevel.DEBUG;
+        if (value > 4000) level = LogLevel.WARN;
+        else if (value > 2500) level = LogLevel.INFO;
+        this.logger._log(level, 'Web Vital: LCP', undefined, {
+          eventType: 'web-vital',
+          vital: { name: 'LCP', value, rating },
+          timestamp: Date.now(),
+        });
+      });
+      lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true });
+      this.webVitalObservers.push(lcpObserver);
+    } catch (e) { /* not supported */ }
+
+    // CLS (Cumulative Layout Shift)
+    try {
+      let clsValue = 0;
+      const clsObserver = new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          if (!(entry as any).hadRecentInput) {
+            clsValue += (entry as any).value;
+          }
+        }
+        const rating = this.getVitalRating('CLS', clsValue);
+        let level = LogLevel.DEBUG;
+        if (clsValue > 0.25) level = LogLevel.WARN;
+        else if (clsValue > 0.1) level = LogLevel.INFO;
+        this.logger._log(level, 'Web Vital: CLS', undefined, {
+          eventType: 'web-vital',
+          vital: { name: 'CLS', value: clsValue, rating },
+          timestamp: Date.now(),
+        });
+      });
+      clsObserver.observe({ type: 'layout-shift', buffered: true });
+      this.webVitalObservers.push(clsObserver);
+    } catch (e) { /* not supported */ }
+
+    // INP (Interaction to Next Paint)
+    try {
+      const inpObserver = new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          const duration = entry.duration;
+          const rating = this.getVitalRating('INP', duration);
+          let level = LogLevel.DEBUG;
+          if (duration > 500) level = LogLevel.WARN;
+          else if (duration > 200) level = LogLevel.INFO;
+          this.logger._log(level, 'Web Vital: INP', undefined, {
+            eventType: 'web-vital',
+            vital: { name: 'INP', value: duration, rating },
+            timestamp: Date.now(),
+          });
+        }
+      });
+      inpObserver.observe({ type: 'event', buffered: true, durationThreshold: 40 } as PerformanceObserverInit);
+      this.webVitalObservers.push(inpObserver);
+    } catch (e) { /* not supported */ }
+  }
+
+  private getVitalRating(name: string, value: number): 'good' | 'needs-improvement' | 'poor' {
+    const thresholds: Record<string, [number, number]> = {
+      'LCP': [2500, 4000],
+      'CLS': [0.1, 0.25],
+      'INP': [200, 500],
+      'FID': [100, 300],
+    };
+    const [good, poor] = thresholds[name] || [0, 0];
+    if (value <= good) return 'good';
+    if (value <= poor) return 'needs-improvement';
+    return 'poor';
   }
 
   public destroy(): void {
@@ -518,6 +673,12 @@ export class AutoInstrumentation {
     if (this.performanceObserver) {
       this.performanceObserver.disconnect();
     }
+
+    // Disconnect all web vital observers
+    for (const observer of this.webVitalObservers) {
+      observer.disconnect();
+    }
+    this.webVitalObservers = [];
 
     // Remove event listeners would require keeping references
     // For now, they'll remain but won't do anything after destroy

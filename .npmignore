@@ -2,3 +2,4 @@ src
 *.ts
 tsconfig.json
 TODOs.md
+test-env

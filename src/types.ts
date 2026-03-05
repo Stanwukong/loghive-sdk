@@ -1,4 +1,6 @@
 import { SanitizationConfig } from "./data-sanitizer";
+import { OfflineManagerConfig } from "./offline-manager";
+import { RemoteConfigOptions } from "./remote-config";
 
 // src/types.ts
 export enum LogLevel {
@@ -22,6 +24,8 @@ export interface LoggerConfig {
   environment?: string;
   serviceName?: string;
   serviceVersion?: string;
+  /** Release version string attached to every log entry. */
+  release?: string;
   // Auto-instrumentation options
   autoCapture?: {
     errors?: boolean;
@@ -51,6 +55,16 @@ export interface LoggerConfig {
     enabled?: boolean;
     config?: SanitizationConfig;
   };
+  /** Offline queuing configuration. */
+  offline?: OfflineManagerConfig;
+  /** Remote SDK configuration fetching. */
+  remoteConfig?: RemoteConfigOptions;
+  /** Distributed tracing configuration. */
+  tracing?: {
+    enabled?: boolean;
+    /** Automatically create spans for network requests. @default false */
+    autoTraceNetworkRequests?: boolean;
+  };
 }
 
 export interface LogEntry {
@@ -72,10 +86,16 @@ export interface LogEntry {
   context?: Record<string, any>;
   metadata?: any;
   // Event-specific fields
-  eventType?: 'error' | 'performance' | 'interaction' | 'network' | 'console' | 'pageview';
+  eventType?: 'error' | 'performance' | 'interaction' | 'network' | 'console' | 'pageview' | 'web-vital' | 'breadcrumb' | 'message';
   userAgent?: string;
   url?: string;
   referrer?: string;
+  /** Distributed trace ID, set when tracing is active. */
+  traceId?: string;
+  /** Distributed span ID, set when tracing is active. */
+  spanId?: string;
+  /** Release version string. */
+  release?: string;
 }
 
 export interface PerformanceEntry {

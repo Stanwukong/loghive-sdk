@@ -4,6 +4,10 @@ import { LoggerConfig, LogEntry, LogLevel } from './types';
 import { delay, getExponentialBackoffDelay, shouldLog, extractErrorDetails, isInBrowser } from './utils';
 import { AutoInstrumentation } from './auto-instrumentation';
 import { DataSanitizer, SanitizationConfig, createDataSanitizer } from './data-sanitizer';
+import { OfflineManager } from './offline-manager';
+import { RemoteConfigManager, RemoteSDKConfig } from './remote-config';
+import { TraceContextManager, TraceContext } from './tracing/trace-context';
+import { Span } from './tracing/span';
 
 export class Monita {
   private static readonly MAX_BUFFER_SIZE = 1000;
@@ -19,6 +23,9 @@ export class Monita {
   private _autoInstrumentation: AutoInstrumentation;
   private _dataSanitizer: DataSanitizer;
   private _beforeUnloadHandler: (() => void) | null = null;
+  private _offlineManager: OfflineManager | null = null;
+  private _remoteConfigManager: RemoteConfigManager | null = null;
+  private _traceContextManager: TraceContextManager | null = null;
 
   constructor(config: LoggerConfig) {
     // Apply default values to the configuration
@@ -47,6 +54,15 @@ export class Monita {
       sanitization: {
         enabled: true,
         ...(config.sanitization || {}),
+      },
+      // Phase 2 defaults
+      release: config.release || '',
+      offline: config.offline || {},
+      remoteConfig: config.remoteConfig || {},
+      tracing: {
+        enabled: false,
+        autoTraceNetworkRequests: false,
+        ...(config.tracing || {}),
       },
     } as Required<LoggerConfig>;
 
@@ -149,6 +165,33 @@ export class Monita {
         process.exit(0);
       });
     }
+
+    // --- Phase 2: Offline Support ---
+    if (this._config.offline) {
+      this._offlineManager = new OfflineManager(this._config.offline);
+      this._offlineManager.setFlushCallback(async (logs) => {
+        await this._sendLogs(logs);
+      });
+    }
+
+    // --- Phase 2: Distributed Tracing ---
+    if (this._config.tracing?.enabled) {
+      this._traceContextManager = new TraceContextManager();
+    }
+
+    // --- Phase 2: Remote Configuration ---
+    if (this._config.remoteConfig?.enabled) {
+      this._remoteConfigManager = new RemoteConfigManager(
+        this._config.projectId,
+        this._config.apiKey,
+        this._config.endpoint,
+        this._config.remoteConfig,
+      );
+      this._remoteConfigManager.setApplyCallback((config) => {
+        this._applyRemoteConfig(config);
+      });
+      this._remoteConfigManager.startPeriodicRefresh();
+    }
   }
 
   public setContext(context: Record<string, any>): void {
@@ -157,6 +200,10 @@ export class Monita {
 
   public getContext(): Record<string, any> {
     return { ...this._context }
+  }
+
+  public clearContext(): void {
+    this._context = {};
   }
 
   public _log(level: LogLevel, message: string, error?: Error, data?: Record<string, any>): void {
@@ -181,6 +228,20 @@ export class Monita {
       context: { ...this._context },
     };
 
+    // Attach release version if configured
+    if (this._config.release) {
+      logEntry.release = this._config.release;
+    }
+
+    // Attach trace context if tracing is active
+    if (this._traceContextManager) {
+      const trace = this._traceContextManager.getCurrentTrace();
+      if (trace) {
+        logEntry.traceId = trace.traceId;
+        logEntry.spanId = trace.spanId;
+      }
+    }
+
     // Add browser-specific fields if available
     if (isInBrowser()) {
       logEntry.userAgent = navigator.userAgent;
@@ -189,11 +250,24 @@ export class Monita {
     }
 
     // Apply data sanitization if enabled
-    const sanitizedEntry = this._config.sanitization?.enabled !== false 
+    const sanitizedEntry = this._config.sanitization?.enabled !== false
       ? this._dataSanitizer.sanitizeLogEntry(logEntry)
       : logEntry;
 
+    // Route to offline queue when offline
+    if (this._offlineManager && !this._offlineManager.isOnline()) {
+      this._offlineManager.enqueue(sanitizedEntry);
+      return;
+    }
+
     this._logBuffer.push(sanitizedEntry);
+
+    // Prevent unbounded buffer growth
+    if (this._logBuffer.length > Monita.MAX_BUFFER_SIZE) {
+      const dropped = this._logBuffer.length - Monita.MAX_BUFFER_SIZE;
+      this._logBuffer = this._logBuffer.slice(-Monita.MAX_BUFFER_SIZE);
+      console.warn(`Monita: Dropped ${dropped} oldest logs due to buffer overflow.`);
+    }
 
     if (this._logBuffer.length >= this._config.batchSize) {
       this.flush();
@@ -226,17 +300,29 @@ export class Monita {
 
   // Enhanced methods for specific event types
   public captureException(error: Error, context?: Record<string, any>): void {
+    const previousContext = { ...this._context };
+    if (context) {
+      this._context = { ...this._context, ...context };
+    }
     this._log(LogLevel.ERROR, 'Exception captured', error, {
       eventType: 'error',
-      ...context,
     });
+    if (context) {
+      this._context = previousContext;
+    }
   }
 
   public captureMessage(message: string, level: LogLevel = LogLevel.INFO, context?: Record<string, any>): void {
+    const previousContext = { ...this._context };
+    if (context) {
+      this._context = { ...this._context, ...context };
+    }
     this._log(level, message, undefined, {
       eventType: 'message',
-      ...context,
     });
+    if (context) {
+      this._context = previousContext;
+    }
   }
 
   public addBreadcrumb(message: string, category?: string, data?: Record<string, any>): void {
@@ -359,9 +445,57 @@ export class Monita {
     return this._dataSanitizer.removeCustomRule(description);
   }
 
+  // --- Distributed Tracing API ---
+
+  public startTrace(name: string): TraceContext | null {
+    if (!this._traceContextManager) {
+      return null;
+    }
+    return this._traceContextManager.startTrace(name);
+  }
+
+  public endTrace(): void {
+    this._traceContextManager?.endTrace();
+  }
+
+  public getCurrentTrace(): TraceContext | null {
+    return this._traceContextManager?.getCurrentTrace() ?? null;
+  }
+
+  public createChildSpan(name: string): Span | null {
+    if (!this._traceContextManager) {
+      return null;
+    }
+    return this._traceContextManager.createChildSpan(name);
+  }
+
+  // --- Remote Configuration ---
+
+  private _applyRemoteConfig(config: RemoteSDKConfig): void {
+    if (config.minLogLevel) {
+      this._config.minLogLevel = config.minLogLevel;
+    }
+    if (config.batchSize !== undefined) {
+      this._config.batchSize = config.batchSize;
+    }
+    if (config.flushIntervalMs !== undefined) {
+      this._config.flushIntervalMs = config.flushIntervalMs;
+      // Restart flush timer with new interval
+      if (this._flushTimer) {
+        clearInterval(this._flushTimer);
+        this._flushTimer = setInterval(() => {
+          this.flush();
+        }, this._config.flushIntervalMs);
+      }
+    }
+    if (config.autoCapture) {
+      this._config.autoCapture = { ...this._config.autoCapture, ...config.autoCapture };
+    }
+  }
+
   public async shutdown(): Promise<void> {
     this._isShuttingDown = true;
-    
+
     if (this._flushTimer) {
       clearInterval(this._flushTimer);
       this._flushTimer = null;
@@ -372,9 +506,32 @@ export class Monita {
 
     // Cleanup auto-instrumentation
     this._autoInstrumentation.destroy();
-    
+
+    // Cleanup Phase 2 managers
+    if (this._offlineManager) {
+      this._offlineManager.destroy();
+      this._offlineManager = null;
+    }
+    if (this._remoteConfigManager) {
+      this._remoteConfigManager.destroy();
+      this._remoteConfigManager = null;
+    }
+    if (this._traceContextManager) {
+      this._traceContextManager.endTrace();
+      this._traceContextManager = null;
+    }
+
+    // Remove beforeunload handler
+    if (isInBrowser() && this._beforeUnloadHandler) {
+      window.removeEventListener('beforeunload', this._beforeUnloadHandler);
+      this._beforeUnloadHandler = null;
+    }
+
     console.log('Monita: Shutting down. Flushing remaining logs...');
     await this.flush();
     console.log('Monita: Shutdown complete.');
+
+    this._initialized = false;
+    this._isShuttingDown = false;
   }
 }

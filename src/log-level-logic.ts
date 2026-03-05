@@ -126,25 +126,25 @@ export class LogLevelDecisionEngine {
 
   // CUSTOM BUSINESS EVENTS - Based on event name/type
   public static getCustomEventLogLevel(eventName: string, properties?: any): LogLevel {
-    // Business-critical events
-    if (eventName.includes('purchase') || 
-        eventName.includes('payment') || 
-        eventName.includes('checkout')) {
-      return LogLevel.INFO; // Business critical
-    }
-
-    // Error-related custom events
-    if (eventName.includes('error') || 
-        eventName.includes('fail') || 
+    // Error-related custom events (highest priority)
+    if (eventName.includes('error') ||
+        eventName.includes('fail') ||
         eventName.includes('exception')) {
       return LogLevel.ERROR;
     }
 
     // Warning-related events
-    if (eventName.includes('warn') || 
-        eventName.includes('timeout') || 
+    if (eventName.includes('warn') ||
+        eventName.includes('timeout') ||
         eventName.includes('retry')) {
       return LogLevel.WARN;
+    }
+
+    // Business-critical events
+    if (eventName.includes('purchase') ||
+        eventName.includes('payment') ||
+        eventName.includes('checkout')) {
+      return LogLevel.INFO; // Business critical
     }
 
     // Default for custom events
