@@ -1,5 +1,35 @@
-src
-*.ts
+# Source
+src/
+cli/
+plugins/
+tests/
+test-env/
+example/
+docs/
+
+# Config
 tsconfig.json
+tsup.config.ts
+vitest.config.ts
+.env
+.env.*
+.gitignore
+.gitattributes
+
+# Dev / docs files
+*.test.ts
+test.ts
 TODOs.md
-test-env
+PLAN.md
+PHASE-1-COMPLETION-SUMMARY.md
+readme_md.md
+
+# Build artifacts not needed by consumers
+dist/*.map
+dist/metafile-*.json
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

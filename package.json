@@ -29,7 +29,10 @@
     "test:unit": "vitest run --exclude tests/integration.test.ts"
   },
   "files": [
-    "dist"
+    "dist/index.cjs",
+    "dist/index.mjs",
+    "dist/index.d.ts",
+    "dist/index.d.mts"
   ],
   "keywords": [
     "logger",
