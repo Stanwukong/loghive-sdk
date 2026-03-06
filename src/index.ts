@@ -67,6 +67,12 @@ export {
   TracePropagator
 } from './tracing';
 
+// Phase 3: Pattern Detection
+export {
+  PatternDetector,
+  type DetectedPattern
+} from './pattern-detector';
+
 // Convenience function for quick setup
 export const createLogger = (config: LoggerConfig) => {
   return new Monita(config);

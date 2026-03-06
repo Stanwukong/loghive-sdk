@@ -1575,6 +1575,112 @@ var TraceContextManager = class {
   }
 };
 
+// src/pattern-detector.ts
+var PatternDetector = class {
+  constructor(options) {
+    this._errors = [];
+    this._lastPatternEmit = /* @__PURE__ */ new Map();
+    this._maxWindowSize = options?.maxWindowSize ?? 100;
+    this._recurringThreshold = options?.recurringThreshold ?? 3;
+    this._recurringWindowMs = options?.recurringWindowMs ?? 5 * 60 * 1e3;
+    this._spikeMultiplier = options?.spikeMultiplier ?? 3;
+    this._spikeShortWindowMs = options?.spikeShortWindowMs ?? 60 * 1e3;
+    this._spikeLongWindowMs = options?.spikeLongWindowMs ?? 10 * 60 * 1e3;
+    this._throttleMs = options?.throttleMs ?? 5 * 60 * 1e3;
+  }
+  /**
+   * Feed an error into the pattern detector.
+   */
+  recordError(message) {
+    const now = Date.now();
+    this._errors.push({ message, timestamp: now });
+    if (this._errors.length > this._maxWindowSize) {
+      this._errors = this._errors.slice(-this._maxWindowSize);
+    }
+  }
+  /**
+   * Detect recurring errors — groups by message similarity,
+   * flags groups with threshold+ occurrences in the window.
+   */
+  detectRecurringErrors() {
+    const now = Date.now();
+    const cutoff = now - this._recurringWindowMs;
+    const recent = this._errors.filter((e) => e.timestamp >= cutoff);
+    const groups = /* @__PURE__ */ new Map();
+    for (const entry of recent) {
+      const key = entry.message.slice(0, 80);
+      groups.set(key, (groups.get(key) || 0) + 1);
+    }
+    const patterns = [];
+    for (const [msg, count] of groups) {
+      if (count >= this._recurringThreshold) {
+        patterns.push({
+          type: "recurring_error",
+          message: msg,
+          count,
+          windowMs: this._recurringWindowMs,
+          detectedAt: new Date(now).toISOString()
+        });
+      }
+    }
+    return patterns;
+  }
+  /**
+   * Detect error spike — compares last-minute error count
+   * against rolling 10-minute average, flags if > multiplier.
+   */
+  detectErrorSpike() {
+    const now = Date.now();
+    const shortCutoff = now - this._spikeShortWindowMs;
+    const longCutoff = now - this._spikeLongWindowMs;
+    const shortCount = this._errors.filter((e) => e.timestamp >= shortCutoff).length;
+    const longErrors = this._errors.filter((e) => e.timestamp >= longCutoff);
+    const longWindowCount = Math.max(longErrors.length, 1);
+    const windowsInLong = this._spikeLongWindowMs / this._spikeShortWindowMs;
+    const avgPerShortWindow = longWindowCount / windowsInLong;
+    if (shortCount > avgPerShortWindow * this._spikeMultiplier && shortCount >= 3) {
+      return {
+        type: "error_spike",
+        message: `${shortCount} errors in the last ${Math.round(this._spikeShortWindowMs / 1e3)}s (${this._spikeMultiplier}x above average)`,
+        count: shortCount,
+        windowMs: this._spikeShortWindowMs,
+        detectedAt: new Date(now).toISOString()
+      };
+    }
+    return null;
+  }
+  /**
+   * Run all detectors and return patterns that haven't been emitted recently.
+   */
+  getPatterns() {
+    const now = Date.now();
+    const allPatterns = [];
+    const recurring = this.detectRecurringErrors();
+    allPatterns.push(...recurring);
+    const spike = this.detectErrorSpike();
+    if (spike) {
+      allPatterns.push(spike);
+    }
+    const newPatterns = [];
+    for (const pattern of allPatterns) {
+      const key = `${pattern.type}:${pattern.message.slice(0, 40)}`;
+      const lastEmit = this._lastPatternEmit.get(key) || 0;
+      if (now - lastEmit >= this._throttleMs) {
+        this._lastPatternEmit.set(key, now);
+        newPatterns.push(pattern);
+      }
+    }
+    return newPatterns;
+  }
+  /**
+   * Clear all tracked errors and pattern history.
+   */
+  reset() {
+    this._errors = [];
+    this._lastPatternEmit.clear();
+  }
+};
+
 // src/logger.ts
 var _Monita = class _Monita {
   constructor(config) {
@@ -1588,6 +1694,7 @@ var _Monita = class _Monita {
     this._offlineManager = null;
     this._remoteConfigManager = null;
     this._traceContextManager = null;
+    this._patternDetector = null;
     this._config = {
       endpoint: "https://loghive-server.vercel.app/api/v1",
       minLogLevel: "info" /* INFO */,
@@ -1622,7 +1729,8 @@ var _Monita = class _Monita {
         enabled: false,
         autoTraceNetworkRequests: false,
         ...config.tracing || {}
-      }
+      },
+      enablePatternDetection: config.enablePatternDetection !== false
     };
     if (!this._config.apiKey) {
       throw new Error("Monita: API Key is required.");
@@ -1704,6 +1812,9 @@ var _Monita = class _Monita {
     if (this._config.tracing?.enabled) {
       this._traceContextManager = new TraceContextManager();
     }
+    if (this._config.enablePatternDetection) {
+      this._patternDetector = new PatternDetector();
+    }
     if (this._config.remoteConfig?.enabled) {
       this._remoteConfigManager = new RemoteConfigManager(
         this._config.projectId,
@@ -1745,6 +1856,9 @@ var _Monita = class _Monita {
       environment: this._config.environment,
       context: { ...this._context }
     };
+    if (data?.eventType) {
+      logEntry.eventType = data.eventType;
+    }
     if (this._config.release) {
       logEntry.release = this._config.release;
     }
@@ -1766,6 +1880,29 @@ var _Monita = class _Monita {
       return;
     }
     this._logBuffer.push(sanitizedEntry);
+    if (this._patternDetector && (level === "error" /* ERROR */ || level === "fatal" /* FATAL */)) {
+      const errorMsg = error?.message || message;
+      this._patternDetector.recordError(errorMsg);
+      const patterns = this._patternDetector.getPatterns();
+      for (const pattern of patterns) {
+        const patternEntry = {
+          projectId: this._config.projectId,
+          timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+          level: "info" /* INFO */,
+          message: `[Pattern Detection] ${pattern.type}: ${pattern.message}`,
+          data: {
+            patternType: pattern.type,
+            count: pattern.count,
+            windowMs: pattern.windowMs
+          },
+          service: this._config.serviceName,
+          environment: this._config.environment,
+          eventType: "message",
+          context: { ...this._context }
+        };
+        this._logBuffer.push(patternEntry);
+      }
+    }
     if (this._logBuffer.length > _Monita.MAX_BUFFER_SIZE) {
       const dropped = this._logBuffer.length - _Monita.MAX_BUFFER_SIZE;
       this._logBuffer = this._logBuffer.slice(-_Monita.MAX_BUFFER_SIZE);
@@ -1975,6 +2112,10 @@ var _Monita = class _Monita {
     if (this._traceContextManager) {
       this._traceContextManager.endTrace();
       this._traceContextManager = null;
+    }
+    if (this._patternDetector) {
+      this._patternDetector.reset();
+      this._patternDetector = null;
     }
     if (isInBrowser() && this._beforeUnloadHandler) {
       window.removeEventListener("beforeunload", this._beforeUnloadHandler);
@@ -2597,6 +2738,7 @@ exports.LogLevel = LogLevel;
 exports.Monita = Monita;
 exports.OfflineManager = OfflineManager;
 exports.PII_PATTERNS = PII_PATTERNS;
+exports.PatternDetector = PatternDetector;
 exports.RemoteConfigManager = RemoteConfigManager;
 exports.SANITIZATION_PRESETS = SANITIZATION_PRESETS;
 exports.Span = Span;

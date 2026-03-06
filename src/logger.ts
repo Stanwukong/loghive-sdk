@@ -8,6 +8,7 @@ import { OfflineManager } from './offline-manager';
 import { RemoteConfigManager, RemoteSDKConfig } from './remote-config';
 import { TraceContextManager, TraceContext } from './tracing/trace-context';
 import { Span } from './tracing/span';
+import { PatternDetector } from './pattern-detector';
 
 export class Monita {
   private static readonly MAX_BUFFER_SIZE = 1000;
@@ -26,6 +27,7 @@ export class Monita {
   private _offlineManager: OfflineManager | null = null;
   private _remoteConfigManager: RemoteConfigManager | null = null;
   private _traceContextManager: TraceContextManager | null = null;
+  private _patternDetector: PatternDetector | null = null;
 
   constructor(config: LoggerConfig) {
     // Apply default values to the configuration
@@ -64,6 +66,7 @@ export class Monita {
         autoTraceNetworkRequests: false,
         ...(config.tracing || {}),
       },
+      enablePatternDetection: config.enablePatternDetection !== false,
     } as Required<LoggerConfig>;
 
     // Validate required configuration
@@ -179,6 +182,11 @@ export class Monita {
       this._traceContextManager = new TraceContextManager();
     }
 
+    // --- Phase 3: Pattern Detection ---
+    if (this._config.enablePatternDetection) {
+      this._patternDetector = new PatternDetector();
+    }
+
     // --- Phase 2: Remote Configuration ---
     if (this._config.remoteConfig?.enabled) {
       this._remoteConfigManager = new RemoteConfigManager(
@@ -228,6 +236,11 @@ export class Monita {
       context: { ...this._context },
     };
 
+    // Extract eventType from data to top-level field for backend indexing
+    if (data?.eventType) {
+      logEntry.eventType = data.eventType;
+    }
+
     // Attach release version if configured
     if (this._config.release) {
       logEntry.release = this._config.release;
@@ -261,6 +274,36 @@ export class Monita {
     }
 
     this._logBuffer.push(sanitizedEntry);
+
+    // Feed errors to pattern detector
+    if (
+      this._patternDetector &&
+      (level === LogLevel.ERROR || level === LogLevel.FATAL)
+    ) {
+      const errorMsg = error?.message || message;
+      this._patternDetector.recordError(errorMsg);
+
+      // Check for new patterns and auto-log them
+      const patterns = this._patternDetector.getPatterns();
+      for (const pattern of patterns) {
+        const patternEntry: LogEntry = {
+          projectId: this._config.projectId,
+          timestamp: new Date().toISOString(),
+          level: LogLevel.INFO,
+          message: `[Pattern Detection] ${pattern.type}: ${pattern.message}`,
+          data: {
+            patternType: pattern.type,
+            count: pattern.count,
+            windowMs: pattern.windowMs,
+          },
+          service: this._config.serviceName,
+          environment: this._config.environment,
+          eventType: 'message',
+          context: { ...this._context },
+        };
+        this._logBuffer.push(patternEntry);
+      }
+    }
 
     // Prevent unbounded buffer growth
     if (this._logBuffer.length > Monita.MAX_BUFFER_SIZE) {
@@ -519,6 +562,10 @@ export class Monita {
     if (this._traceContextManager) {
       this._traceContextManager.endTrace();
       this._traceContextManager = null;
+    }
+    if (this._patternDetector) {
+      this._patternDetector.reset();
+      this._patternDetector = null;
     }
 
     // Remove beforeunload handler

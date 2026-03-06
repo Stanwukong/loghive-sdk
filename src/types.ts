@@ -65,6 +65,8 @@ export interface LoggerConfig {
     /** Automatically create spans for network requests. @default false */
     autoTraceNetworkRequests?: boolean;
   };
+  /** Enable client-side error pattern detection. @default true */
+  enablePatternDetection?: boolean;
 }
 
 export interface LogEntry {

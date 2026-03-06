@@ -202,6 +202,8 @@ interface LoggerConfig {
         /** Automatically create spans for network requests. @default false */
         autoTraceNetworkRequests?: boolean;
     };
+    /** Enable client-side error pattern detection. @default true */
+    enablePatternDetection?: boolean;
 }
 interface LogEntry {
     projectId: string;
@@ -501,6 +503,7 @@ declare class Monita {
     private _offlineManager;
     private _remoteConfigManager;
     private _traceContextManager;
+    private _patternDetector;
     constructor(config: LoggerConfig);
     isInitialized(): boolean;
     init(): void;
@@ -880,6 +883,60 @@ declare class TracePropagator {
     static extract(headers: Record<string, string>): TraceContext | null;
 }
 
+/**
+ * PatternDetector — Client-side error pattern recognition.
+ * Detects recurring errors and error spikes without any external API.
+ */
+interface DetectedPattern {
+    type: "recurring_error" | "error_spike";
+    message: string;
+    count: number;
+    windowMs: number;
+    detectedAt: string;
+}
+declare class PatternDetector {
+    private _errors;
+    private _maxWindowSize;
+    private _recurringThreshold;
+    private _recurringWindowMs;
+    private _spikeMultiplier;
+    private _spikeShortWindowMs;
+    private _spikeLongWindowMs;
+    private _lastPatternEmit;
+    private _throttleMs;
+    constructor(options?: {
+        maxWindowSize?: number;
+        recurringThreshold?: number;
+        recurringWindowMs?: number;
+        spikeMultiplier?: number;
+        spikeShortWindowMs?: number;
+        spikeLongWindowMs?: number;
+        throttleMs?: number;
+    });
+    /**
+     * Feed an error into the pattern detector.
+     */
+    recordError(message: string): void;
+    /**
+     * Detect recurring errors — groups by message similarity,
+     * flags groups with threshold+ occurrences in the window.
+     */
+    detectRecurringErrors(): DetectedPattern[];
+    /**
+     * Detect error spike — compares last-minute error count
+     * against rolling 10-minute average, flags if > multiplier.
+     */
+    detectErrorSpike(): DetectedPattern | null;
+    /**
+     * Run all detectors and return patterns that haven't been emitted recently.
+     */
+    getPatterns(): DetectedPattern[];
+    /**
+     * Clear all tracked errors and pattern history.
+     */
+    reset(): void;
+}
+
 declare const createLogger: (config: LoggerConfig) => Monita;
 
-export { type AuditEntry, AutoInstrumentation, type Breadcrumb, BreadcrumbManager, CircuitBreaker, type CircuitBreakerConfig, CircuitBreakerState, type CompressionResult, DataSanitizer, type EnvironmentSnapshot, type HealthMetrics, HealthMetricsCollector, type LogEntry, LogLevel, type LoggerConfig, Monita, type NetworkRequest, OfflineManager, type OfflineManagerConfig, PII_PATTERNS, type PerformanceEntry, RemoteConfigManager, type RemoteConfigOptions, type RemoteSDKConfig, type RetentionPolicy, SANITIZATION_PRESETS, type SanitizationConfig, type SanitizationRule, Span, type SpanData, type TraceContext, TraceContextManager, TracePropagator, type UserInteraction, compressPayload, createDataSanitizer, createLogger, preparePayloadForTransmission, uint8ArrayToBase64 };
+export { type AuditEntry, AutoInstrumentation, type Breadcrumb, BreadcrumbManager, CircuitBreaker, type CircuitBreakerConfig, CircuitBreakerState, type CompressionResult, DataSanitizer, type DetectedPattern, type EnvironmentSnapshot, type HealthMetrics, HealthMetricsCollector, type LogEntry, LogLevel, type LoggerConfig, Monita, type NetworkRequest, OfflineManager, type OfflineManagerConfig, PII_PATTERNS, PatternDetector, type PerformanceEntry, RemoteConfigManager, type RemoteConfigOptions, type RemoteSDKConfig, type RetentionPolicy, SANITIZATION_PRESETS, type SanitizationConfig, type SanitizationRule, Span, type SpanData, type TraceContext, TraceContextManager, TracePropagator, type UserInteraction, compressPayload, createDataSanitizer, createLogger, preparePayloadForTransmission, uint8ArrayToBase64 };
