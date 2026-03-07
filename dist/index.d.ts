@@ -204,6 +204,14 @@ interface LoggerConfig {
     };
     /** Enable client-side error pattern detection. @default true */
     enablePatternDetection?: boolean;
+    /** Callback invoked when a pattern is detected (recurring error or error spike). */
+    onPatternDetected?: (pattern: {
+        type: string;
+        message: string;
+        count: number;
+        windowMs: number;
+        detectedAt: string;
+    }) => void;
 }
 interface LogEntry {
     projectId: string;

@@ -1730,7 +1730,8 @@ var _Monita = class _Monita {
         autoTraceNetworkRequests: false,
         ...config.tracing || {}
       },
-      enablePatternDetection: config.enablePatternDetection !== false
+      enablePatternDetection: config.enablePatternDetection !== false,
+      onPatternDetected: config.onPatternDetected || void 0
     };
     if (!this._config.apiKey) {
       throw new Error("Monita: API Key is required.");
@@ -1885,10 +1886,16 @@ var _Monita = class _Monita {
       this._patternDetector.recordError(errorMsg);
       const patterns = this._patternDetector.getPatterns();
       for (const pattern of patterns) {
+        if (this._config.onPatternDetected) {
+          try {
+            this._config.onPatternDetected(pattern);
+          } catch {
+          }
+        }
         const patternEntry = {
           projectId: this._config.projectId,
           timestamp: (/* @__PURE__ */ new Date()).toISOString(),
-          level: "info" /* INFO */,
+          level: "warn" /* WARN */,
           message: `[Pattern Detection] ${pattern.type}: ${pattern.message}`,
           data: {
             patternType: pattern.type,

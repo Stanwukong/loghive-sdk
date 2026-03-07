@@ -67,6 +67,7 @@ export class Monita {
         ...(config.tracing || {}),
       },
       enablePatternDetection: config.enablePatternDetection !== false,
+      onPatternDetected: config.onPatternDetected || undefined,
     } as Required<LoggerConfig>;
 
     // Validate required configuration
@@ -286,10 +287,19 @@ export class Monita {
       // Check for new patterns and auto-log them
       const patterns = this._patternDetector.getPatterns();
       for (const pattern of patterns) {
+        // Invoke user callback if provided
+        if (this._config.onPatternDetected) {
+          try {
+            this._config.onPatternDetected(pattern);
+          } catch {
+            // Silently ignore callback errors
+          }
+        }
+
         const patternEntry: LogEntry = {
           projectId: this._config.projectId,
           timestamp: new Date().toISOString(),
-          level: LogLevel.INFO,
+          level: LogLevel.WARN,
           message: `[Pattern Detection] ${pattern.type}: ${pattern.message}`,
           data: {
             patternType: pattern.type,
