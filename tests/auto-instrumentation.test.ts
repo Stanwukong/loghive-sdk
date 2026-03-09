@@ -2,7 +2,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { AutoInstrumentation } from "../src/auto-instrumentation";
-import { Monita } from "../src/logger";
+import { Apperio } from "../src/logger";
 import { LogLevel } from "../src/types";
 import axios from "axios";
 
@@ -16,7 +16,7 @@ vi.mock("axios", () => ({
 }));
 
 describe("AutoInstrumentation", () => {
-  let logger: Monita;
+  let logger: Apperio;
   let autoInstrumentation: AutoInstrumentation;
   let logSpy: ReturnType<typeof vi.spyOn>;
 
@@ -36,7 +36,7 @@ describe("AutoInstrumentation", () => {
     vi.spyOn(console, "log").mockImplementation(() => {});
 
     // Create logger with ALL autoCapture disabled so it doesn't interfere
-    logger = new Monita({
+    logger = new Apperio({
       apiKey: "test-api-key",
       projectId: "test-project-id",
       minLogLevel: LogLevel.TRACE,

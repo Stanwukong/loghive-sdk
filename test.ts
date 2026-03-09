@@ -1,7 +1,7 @@
-import { Monita } from './src/logger'
+import { Apperio } from './src/logger'
 
 async function testConnection() {
-    const logger = new Monita({
+    const logger = new Apperio({
         apiKey: '60e1ba75-a67e-480a-8b9c-1e615ce3a987',
         projectId: '6884171e07ebd35a3e34a5ba',
         endpoint: 'http://localhost:5000/api/v1',

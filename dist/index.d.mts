@@ -1,7 +1,7 @@
 /**
  * Offline Manager
  *
- * Provides in-memory offline log queuing for the Monita SDK.
+ * Provides in-memory offline log queuing for the Apperio SDK.
  * When the browser goes offline, logs are enqueued and automatically
  * flushed when connectivity is restored.
  *
@@ -495,7 +495,7 @@ declare class TraceContextManager {
     removeSpan(spanId: string): void;
 }
 
-declare class Monita {
+declare class Apperio {
     private static readonly MAX_BUFFER_SIZE;
     private _config;
     private _logBuffer;
@@ -556,7 +556,7 @@ declare class AutoInstrumentation {
     private performanceObserver?;
     private breadcrumbManager;
     private webVitalObservers;
-    constructor(logger: Monita);
+    constructor(logger: Apperio);
     init(config: {
         errors?: boolean;
         performance?: boolean;
@@ -945,6 +945,6 @@ declare class PatternDetector {
     reset(): void;
 }
 
-declare const createLogger: (config: LoggerConfig) => Monita;
+declare const createLogger: (config: LoggerConfig) => Apperio;
 
-export { type AuditEntry, AutoInstrumentation, type Breadcrumb, BreadcrumbManager, CircuitBreaker, type CircuitBreakerConfig, CircuitBreakerState, type CompressionResult, DataSanitizer, type DetectedPattern, type EnvironmentSnapshot, type HealthMetrics, HealthMetricsCollector, type LogEntry, LogLevel, type LoggerConfig, Monita, type NetworkRequest, OfflineManager, type OfflineManagerConfig, PII_PATTERNS, PatternDetector, type PerformanceEntry, RemoteConfigManager, type RemoteConfigOptions, type RemoteSDKConfig, type RetentionPolicy, SANITIZATION_PRESETS, type SanitizationConfig, type SanitizationRule, Span, type SpanData, type TraceContext, TraceContextManager, TracePropagator, type UserInteraction, compressPayload, createDataSanitizer, createLogger, preparePayloadForTransmission, uint8ArrayToBase64 };
+export { Apperio, type AuditEntry, AutoInstrumentation, type Breadcrumb, BreadcrumbManager, CircuitBreaker, type CircuitBreakerConfig, CircuitBreakerState, type CompressionResult, DataSanitizer, type DetectedPattern, type EnvironmentSnapshot, type HealthMetrics, HealthMetricsCollector, type LogEntry, LogLevel, type LoggerConfig, type NetworkRequest, OfflineManager, type OfflineManagerConfig, PII_PATTERNS, PatternDetector, type PerformanceEntry, RemoteConfigManager, type RemoteConfigOptions, type RemoteSDKConfig, type RetentionPolicy, SANITIZATION_PRESETS, type SanitizationConfig, type SanitizationRule, Span, type SpanData, type TraceContext, TraceContextManager, TracePropagator, type UserInteraction, compressPayload, createDataSanitizer, createLogger, preparePayloadForTransmission, uint8ArrayToBase64 };

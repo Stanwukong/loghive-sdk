@@ -1,5 +1,5 @@
 // src/auto-instrumentation.ts
-import { Monita } from "./logger";
+import { Apperio } from "./logger";
 import {
   LogLevel,
   PerformanceEntry,
@@ -15,7 +15,7 @@ import {
 import { BreadcrumbManager } from "./breadcrumb-manager";
 
 export class AutoInstrumentation {
-  private logger: Monita;
+  private logger: Apperio;
   private originalFetch?: typeof fetch;
   private originalXHROpen?: typeof XMLHttpRequest.prototype.open;
   private originalXHRSend?: typeof XMLHttpRequest.prototype.send;
@@ -25,7 +25,7 @@ export class AutoInstrumentation {
   private breadcrumbManager: BreadcrumbManager;
   private webVitalObservers: PerformanceObserver[] = [];
 
-  constructor(logger: Monita) {
+  constructor(logger: Apperio) {
     this.logger = logger;
     this.breadcrumbManager = new BreadcrumbManager();
   }

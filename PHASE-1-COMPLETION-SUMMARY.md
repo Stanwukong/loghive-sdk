@@ -373,7 +373,7 @@ collector.reset();
 
 **Human-Readable Summary**:
 ```
-Monita SDK Health Metrics
+Apperio SDK Health Metrics
 ==========================
 Uptime: 3600s
 Buffer: 5 logs (peak: 87)
@@ -478,7 +478,7 @@ Duration: 31.82s
 - Health Metrics - Fully implemented, exported, documented
 
 **Logger Integration** (⏳ Pending):
-The three new features are **not yet integrated into the Monita logger class**. Next steps:
+The three new features are **not yet integrated into the Apperio logger class**. Next steps:
 1. Add circuit breaker to logger constructor and flush logic
 2. Add compression to log transmission (`_sendLogs()`)
 3. Add health metrics tracking throughout logger lifecycle
@@ -494,7 +494,7 @@ The three new features are **not yet integrated into the Monita logger class**. 
 - [ ] Integrate circuit breaker into logger flush logic
 - [ ] Integrate compression into log transmission
 - [ ] Integrate health metrics tracking (buffer, flush, retry events)
-- [ ] Add `getHealthMetrics()` method to Monita class
+- [ ] Add `getHealthMetrics()` method to Apperio class
 - [ ] Update `LoggerConfig` type with new options:
   ```typescript
   interface LoggerConfig {

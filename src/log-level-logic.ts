@@ -1,5 +1,5 @@
 // src/log-level-logic.ts
-import { Monita } from './logger';
+import { Apperio } from './logger';
 import { LogLevel } from './types';
 
 /**
@@ -252,7 +252,7 @@ export interface AutoCaptureConfig {
 }
 
 // Usage example with custom levels
-const logger = new Monita({
+const logger = new Apperio({
   apiKey: 'key',
   projectId: 'project',
   minLogLevel: LogLevel.INFO, // This still applies to auto-generated logs

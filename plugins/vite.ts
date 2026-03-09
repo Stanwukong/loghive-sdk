@@ -1,7 +1,7 @@
 import * as path from 'path';
 import { uploadSourceMaps } from '../cli/upload-sourcemaps';
 
-export interface MonitaVitePluginOptions {
+export interface ApperioVitePluginOptions {
   release: string;
   projectId: string;
   apiKey: string;
@@ -10,16 +10,16 @@ export interface MonitaVitePluginOptions {
 }
 
 /**
- * Vite plugin that automatically uploads source maps to Monita
+ * Vite plugin that automatically uploads source maps to Apperio
  * after each production build.
  *
  * Usage:
  * ```ts
- * import { monitaVitePlugin } from 'monita/plugins/vite';
+ * import { apperioVitePlugin } from 'apperio/plugins/vite';
  *
  * export default defineConfig({
  *   plugins: [
- *     monitaVitePlugin({
+ *     apperioVitePlugin({
  *       release: '1.0.0',
  *       projectId: 'your-project-id',
  *       apiKey: 'your-api-key',
@@ -31,27 +31,27 @@ export interface MonitaVitePluginOptions {
  * Vite types are intentionally avoided so that vite is not required
  * as a dependency. The function returns a plain plugin-shaped object.
  */
-export function monitaVitePlugin(options: MonitaVitePluginOptions) {
+export function apperioVitePlugin(options: ApperioVitePluginOptions) {
   const { release, projectId, apiKey, endpoint, outDir = 'dist' } = options;
 
   if (!release) {
-    throw new Error('[monitaVitePlugin] "release" is required');
+    throw new Error('[apperioVitePlugin] "release" is required');
   }
   if (!projectId) {
-    throw new Error('[monitaVitePlugin] "projectId" is required');
+    throw new Error('[apperioVitePlugin] "projectId" is required');
   }
   if (!apiKey) {
-    throw new Error('[monitaVitePlugin] "apiKey" is required');
+    throw new Error('[apperioVitePlugin] "apiKey" is required');
   }
 
   return {
-    name: 'monita-sourcemap-upload',
+    name: 'apperio-sourcemap-upload',
     apply: 'build' as const,
 
     async closeBundle() {
       const resolvedOutDir = path.resolve(process.cwd(), outDir);
 
-      console.log(`[monita-vite] Uploading source maps from ${resolvedOutDir}...`);
+      console.log(`[apperio-vite] Uploading source maps from ${resolvedOutDir}...`);
 
       try {
         const result = await uploadSourceMaps({
@@ -64,12 +64,12 @@ export function monitaVitePlugin(options: MonitaVitePluginOptions) {
 
         if (result.failed.length > 0) {
           console.warn(
-            `[monita-vite] ${result.failed.length} source map(s) failed to upload.`
+            `[apperio-vite] ${result.failed.length} source map(s) failed to upload.`
           );
         }
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : String(error);
-        console.error(`[monita-vite] Source map upload error: ${message}`);
+        console.error(`[apperio-vite] Source map upload error: ${message}`);
       }
     },
   };

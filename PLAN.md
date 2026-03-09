@@ -1,6 +1,6 @@
-# PLAN.md — Monita SDK Development Roadmap
+# PLAN.md — Apperio SDK Development Roadmap
 
-> **Component**: `loghive-sdk/` — JavaScript/TypeScript SDK (npm: `monita`)
+> **Component**: `loghive-sdk/` — JavaScript/TypeScript SDK (npm: `apperio`)
 > **Parent Plan**: [../PLAN.md](../PLAN.md)
 > **Product Spec**: [../PRODUCT.md](../PRODUCT.md)
 
@@ -312,7 +312,7 @@ loghive-sdk/
 
 **Goal**: Create framework-specific wrappers that provide idiomatic integration.
 
-### 3.1 React SDK (`@monita/react`)
+### 3.1 React SDK (`@apperio/react`)
 
 **Duration**: 5-7 days
 
@@ -320,30 +320,30 @@ loghive-sdk/
 ```
 packages/react/
 ├── src/
-│   ├── MonitaProvider.tsx    ← Context provider (wraps createEnhancedLogger)
-│   ├── useMonita.ts          ← Hook: access logger instance
+│   ├── ApperioProvider.tsx    ← Context provider (wraps createEnhancedLogger)
+│   ├── useApperio.ts          ← Hook: access logger instance
 │   ├── useLogError.ts        ← Hook: log errors with component context
 │   ├── useTrackEvent.ts      ← Hook: track custom events
 │   ├── usePerformance.ts     ← Hook: measure component render performance
-│   ├── ErrorBoundary.tsx     ← React error boundary that auto-reports to Monita
-│   ├── MonitaDevtools.tsx    ← Development overlay showing SDK status (dev only)
+│   ├── ErrorBoundary.tsx     ← React error boundary that auto-reports to Apperio
+│   ├── ApperioDevtools.tsx    ← Development overlay showing SDK status (dev only)
 │   └── index.ts              ← Public exports
 ├── package.json
 └── tsconfig.json
 ```
 
 **Key features**:
-- [ ] `<MonitaProvider config={}>` — Initializes SDK, provides context
-- [ ] `useMonita()` — Returns logger instance with all methods
+- [ ] `<ApperioProvider config={}>` — Initializes SDK, provides context
+- [ ] `useApperio()` — Returns logger instance with all methods
 - [ ] `useLogError()` — Returns function to log errors with component name/props context
 - [ ] `useTrackEvent()` — Returns function to track custom events
 - [ ] `usePerformance(componentName)` — Measures render time, reports slow renders
-- [ ] `<MonitaErrorBoundary>` — Catches React errors, reports to Monita, shows fallback UI
-- [ ] `<MonitaDevtools>` — Floating panel showing: buffer size, last flush, connection status
+- [ ] `<ApperioErrorBoundary>` — Catches React errors, reports to Apperio, shows fallback UI
+- [ ] `<ApperioDevtools>` — Floating panel showing: buffer size, last flush, connection status
 - [ ] Auto-capture React component errors with component stack
 - [ ] SSR-safe (no window access during server render)
 
-### 3.2 Next.js SDK (`@monita/nextjs`)
+### 3.2 Next.js SDK (`@apperio/nextjs`)
 
 **Duration**: 4-5 days
 
@@ -354,7 +354,7 @@ packages/nextjs/
 │   ├── middleware.ts          ← Next.js middleware for request logging
 │   ├── instrumentation.ts    ← Next.js instrumentation hook
 │   ├── server-logger.ts      ← Server-side logger (API routes, server components)
-│   ├── client-provider.tsx   ← Client-side provider (extends @monita/react)
+│   ├── client-provider.tsx   ← Client-side provider (extends @apperio/react)
 │   ├── route-handler.ts      ← Wrapper for API route handlers
 │   └── index.ts
 ├── package.json
@@ -368,29 +368,29 @@ packages/nextjs/
 - [ ] Client-side provider that extends React SDK
 - [ ] Deployment tracking via Vercel environment variables
 
-### 3.3 Express Middleware (`@monita/express`)
+### 3.3 Express Middleware (`@apperio/express`)
 
 **Duration**: 2-3 days
 
 **Key features**:
-- [ ] `monita.requestLogger()` — Middleware that logs every request/response
-- [ ] `monita.errorHandler()` — Error middleware that captures and reports errors
+- [ ] `apperio.requestLogger()` — Middleware that logs every request/response
+- [ ] `apperio.errorHandler()` — Error middleware that captures and reports errors
 - [ ] Request timing (start → end, response time)
 - [ ] Request context: method, path, status, IP, user agent
 - [ ] Configurable: path exclusions, header capture, body capture
 
-### 3.4 Vue.js Plugin (`@monita/vue`)
+### 3.4 Vue.js Plugin (`@apperio/vue`)
 
 **Duration**: 3-4 days
 
 **Key features**:
-- [ ] Vue 3 plugin: `app.use(MonitaPlugin, config)`
-- [ ] `useMonita()` composable
+- [ ] Vue 3 plugin: `app.use(ApperioPlugin, config)`
+- [ ] `useApperio()` composable
 - [ ] Global error handler integration (`app.config.errorHandler`)
 - [ ] Router integration (page view tracking)
 - [ ] Component performance tracking via lifecycle hooks
 
-### 3.5 Node.js SDK (`@monita/node`)
+### 3.5 Node.js SDK (`@apperio/node`)
 
 **Duration**: 2-3 days
 
@@ -413,7 +413,7 @@ packages/nextjs/
 - [ ] Privacy-aware: mask all text inputs, redact sensitive elements
 
 ### 4.2 Custom Metrics API
-- [ ] `monita.metric('response_time', 142, { endpoint: '/api/users' })`
+- [ ] `apperio.metric('response_time', 142, { endpoint: '/api/users' })`
 - [ ] Counter, gauge, histogram metric types
 - [ ] Aggregation on client side before sending
 - [ ] Dashboard integration for custom metric visualization
@@ -433,11 +433,11 @@ packages/nextjs/
 **Duration**: 3-4 days
 
 ```
-monita init                          ← Interactive project setup
-monita upload-sourcemaps --release   ← Upload source maps
-monita logs --project --tail         ← Stream logs in terminal
-monita projects list                 ← List projects
-monita config set                    ← Update SDK config
+apperio init                          ← Interactive project setup
+apperio upload-sourcemaps --release   ← Upload source maps
+apperio logs --project --tail         ← Stream logs in terminal
+apperio projects list                 ← List projects
+apperio config set                    ← Update SDK config
 ```
 
 ### 5.2 Documentation
@@ -472,15 +472,15 @@ monita config set                    ← Update SDK config
 When framework SDKs are added, migrate to a monorepo:
 
 ```
-monita/
+apperio/
 ├── packages/
-│   ├── core/          ← Current loghive-sdk (npm: monita)
-│   ├── react/         ← @monita/react
-│   ├── nextjs/        ← @monita/nextjs
-│   ├── express/       ← @monita/express
-│   ├── vue/           ← @monita/vue
-│   ├── node/          ← @monita/node
-│   └── cli/           ← @monita/cli
+│   ├── core/          ← Current loghive-sdk (npm: apperio)
+│   ├── react/         ← @apperio/react
+│   ├── nextjs/        ← @apperio/nextjs
+│   ├── express/       ← @apperio/express
+│   ├── vue/           ← @apperio/vue
+│   ├── node/          ← @apperio/node
+│   └── cli/           ← @apperio/cli
 ├── examples/
 │   ├── react-app/
 │   ├── nextjs-app/

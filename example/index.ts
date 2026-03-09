@@ -1,8 +1,8 @@
 /**
  * @file example/index.ts
- * @description Comprehensive example usage of the Monita SDK.
+ * @description Comprehensive example usage of the Apperio SDK.
  * This file demonstrates initialization, configuration, and various logging scenarios
- * to test the new version of the monita SDK.
+ * to test the new version of the apperio SDK.
  *
  * To run this example:
  * 1. Ensure you have Node.js and npm installed.
@@ -15,7 +15,7 @@
  */
 
 import dotenv from "dotenv";
-import { Monita, LogLevel } from "../src"; // Adjust path if running from different directory
+import { Apperio, LogLevel } from "../src"; // Adjust path if running from different directory
 
 // Load environment variables from .env file
 dotenv.config();
@@ -33,7 +33,7 @@ if (!API_KEY || !PROJECT_ID || !ENDPOINT) {
 }
 
 // --- Initialize the logger with comprehensive configuration ---
-const logger = new Monita({
+const logger = new Apperio({
   apiKey: API_KEY,
   projectId: PROJECT_ID,
   endpoint: ENDPOINT,
@@ -43,7 +43,7 @@ const logger = new Monita({
   maxRetries: 3, // Increased retries for better reliability
   retryDelayMs: 1000, // Retry delay
   environment: "testing", // Changed to testing environment
-  serviceName: "monita-test-app", // Changed from serviceName to service
+  serviceName: "apperio-test-app", // Changed from serviceName to service
   autoCapture: {
     networkRequests: true,
     performance: true
@@ -62,7 +62,7 @@ logger.setContext({
   // Note: context will be stored in the 'context' field of the log document
 });
 
-console.log("🚀 Monita SDK Test Suite Started...");
+console.log("🚀 Apperio SDK Test Suite Started...");
 console.log("📊 Configuration:", {
   environment: "testing",
   minLogLevel: "TRACE",
@@ -305,7 +305,7 @@ async function runTestSuite() {
         stack: (error as Error).stack,
       },
       {
-        testSuite: "monita-comprehensive",
+        testSuite: "apperio-comprehensive",
         timestamp: new Date().toISOString(),
       }
     );
@@ -343,7 +343,7 @@ process.on("uncaughtException", (error) => {
       stack: error.stack,
     },
     {
-      testSuite: "monita-comprehensive",
+      testSuite: "apperio-comprehensive",
       timestamp: new Date().toISOString(),
     }
   );
@@ -367,7 +367,7 @@ process.on("unhandledRejection", (reason, promise) => {
 
   logger.fatal("Unhandled promise rejection in test suite", undefined, {
     ...errorData,
-    testSuite: "monita-comprehensive",
+    testSuite: "apperio-comprehensive",
     timestamp: new Date().toISOString(),
   });
   gracefulShutdown("UNHANDLED_REJECTION");

@@ -2,13 +2,13 @@
  * @file example/data-sanitization-example.ts
  * @description Comprehensive example demonstrating data sanitization features
  *
- * This example shows how to use the Monita SDK's data sanitization capabilities
+ * This example shows how to use the Apperio SDK's data sanitization capabilities
  * for enterprise-grade security and compliance.
  */
 
 import dotenv from "dotenv";
 import {
-  Monita,
+  Apperio,
   LogLevel,
   SANITIZATION_PRESETS,
   createDataSanitizer,
@@ -23,12 +23,12 @@ const ENDPOINT =
   process.env.REMOTE_LOGGER_ENDPOINT ||
   "https://loghive-server.vercel.app/api/v1";
 
-console.log("🔒 Monita Data Sanitization Example");
+console.log("🔒 Apperio Data Sanitization Example");
 console.log("=====================================");
 
 // Example 1: Basic sanitization with default configuration
 console.log("\n📝 Example 1: Basic Sanitization");
-const basicLogger = new Monita({
+const basicLogger = new Apperio({
   apiKey: API_KEY,
   endpoint: ENDPOINT,
   projectId: PROJECT_ID,
@@ -52,7 +52,7 @@ basicLogger.info("User registration", {
 
 // Example 2: Strict sanitization for highly sensitive data
 console.log("\n🔐 Example 2: Strict Sanitization");
-const strictLogger = new Monita({
+const strictLogger = new Apperio({
   apiKey: API_KEY,
   projectId: PROJECT_ID,
   endpoint: ENDPOINT,
@@ -79,7 +79,7 @@ strictLogger.info("Financial transaction", {
 
 // Example 3: Custom sanitization rules
 console.log("\n⚙️ Example 3: Custom Sanitization Rules");
-const customLogger = new Monita({
+const customLogger = new Apperio({
   apiKey: API_KEY,
   projectId: PROJECT_ID,
   endpoint: ENDPOINT,
@@ -139,7 +139,7 @@ customLogger.info("Employee data", {
 
 // Example 4: Audit trail and monitoring
 console.log("\n📊 Example 4: Audit Trail and Monitoring");
-const auditLogger = new Monita({
+const auditLogger = new Apperio({
   apiKey: API_KEY,
   projectId: PROJECT_ID,
   endpoint: ENDPOINT,
@@ -249,7 +249,7 @@ console.log("Sanitized data:", JSON.stringify(sanitizedData, null, 2));
 
 // Example 6: Performance testing
 console.log("\n⚡ Example 6: Performance Testing");
-const perfLogger = new Monita({
+const perfLogger = new Apperio({
   apiKey: API_KEY,
   projectId: PROJECT_ID,
   endpoint: ENDPOINT,
@@ -288,7 +288,7 @@ console.log(`Average time per log: ${(duration / iterations).toFixed(2)}ms`);
 
 // Example 7: Error handling and edge cases
 console.log("\n🚨 Example 7: Error Handling and Edge Cases");
-const errorLogger = new Monita({
+const errorLogger = new Apperio({
   apiKey: API_KEY,
   projectId: PROJECT_ID,
   endpoint: ENDPOINT,

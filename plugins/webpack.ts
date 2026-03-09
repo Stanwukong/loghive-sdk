@@ -1,6 +1,6 @@
 import { uploadSourceMaps } from '../cli/upload-sourcemaps';
 
-export interface MonitaWebpackPluginOptions {
+export interface ApperioWebpackPluginOptions {
   release: string;
   projectId: string;
   apiKey: string;
@@ -8,16 +8,16 @@ export interface MonitaWebpackPluginOptions {
 }
 
 /**
- * Webpack plugin that automatically uploads source maps to Monita
+ * Webpack plugin that automatically uploads source maps to Apperio
  * after each successful build.
  *
  * Usage:
  * ```js
- * const { MonitaWebpackPlugin } = require('monita/plugins/webpack');
+ * const { ApperioWebpackPlugin } = require('apperio/plugins/webpack');
  *
  * module.exports = {
  *   plugins: [
- *     new MonitaWebpackPlugin({
+ *     new ApperioWebpackPlugin({
  *       release: '1.0.0',
  *       projectId: 'your-project-id',
  *       apiKey: 'your-api-key',
@@ -29,18 +29,18 @@ export interface MonitaWebpackPluginOptions {
  * Webpack types are intentionally avoided (`any` is used for Compiler
  * and Compilation) so that webpack is not required as a dependency.
  */
-export class MonitaWebpackPlugin {
-  private options: MonitaWebpackPluginOptions;
+export class ApperioWebpackPlugin {
+  private options: ApperioWebpackPluginOptions;
 
-  constructor(options: MonitaWebpackPluginOptions) {
+  constructor(options: ApperioWebpackPluginOptions) {
     if (!options.release) {
-      throw new Error('[MonitaWebpackPlugin] "release" is required');
+      throw new Error('[ApperioWebpackPlugin] "release" is required');
     }
     if (!options.projectId) {
-      throw new Error('[MonitaWebpackPlugin] "projectId" is required');
+      throw new Error('[ApperioWebpackPlugin] "projectId" is required');
     }
     if (!options.apiKey) {
-      throw new Error('[MonitaWebpackPlugin] "apiKey" is required');
+      throw new Error('[ApperioWebpackPlugin] "apiKey" is required');
     }
     this.options = options;
   }
@@ -52,17 +52,17 @@ export class MonitaWebpackPlugin {
    */
   apply(compiler: any): void {
     compiler.hooks.afterEmit.tapAsync(
-      'MonitaWebpackPlugin',
+      'ApperioWebpackPlugin',
       async (compilation: any, callback: (err?: Error) => void) => {
         const outputPath: string | undefined = compilation.outputOptions?.path ?? compiler.options?.output?.path;
 
         if (!outputPath) {
-          console.error('[MonitaWebpackPlugin] Could not determine output path. Skipping source map upload.');
+          console.error('[ApperioWebpackPlugin] Could not determine output path. Skipping source map upload.');
           callback();
           return;
         }
 
-        console.log(`[MonitaWebpackPlugin] Uploading source maps from ${outputPath}...`);
+        console.log(`[ApperioWebpackPlugin] Uploading source maps from ${outputPath}...`);
 
         try {
           const result = await uploadSourceMaps({
@@ -75,12 +75,12 @@ export class MonitaWebpackPlugin {
 
           if (result.failed.length > 0) {
             console.warn(
-              `[MonitaWebpackPlugin] ${result.failed.length} source map(s) failed to upload.`
+              `[ApperioWebpackPlugin] ${result.failed.length} source map(s) failed to upload.`
             );
           }
         } catch (error: unknown) {
           const message = error instanceof Error ? error.message : String(error);
-          console.error(`[MonitaWebpackPlugin] Source map upload error: ${message}`);
+          console.error(`[ApperioWebpackPlugin] Source map upload error: ${message}`);
         }
 
         callback();

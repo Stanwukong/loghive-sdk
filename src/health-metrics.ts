@@ -306,7 +306,7 @@ export class HealthMetricsCollector {
     const metrics = this.getMetrics();
 
     return `
-Monita SDK Health Metrics
+Apperio SDK Health Metrics
 ==========================
 Uptime: ${metrics.uptime}s
 Buffer: ${metrics.currentBufferSize} logs (peak: ${metrics.bufferHighWatermark})

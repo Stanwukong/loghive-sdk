@@ -86,7 +86,7 @@ export class RemoteConfigManager {
 
     try {
       if (typeof fetch === 'undefined') {
-        console.warn('[Monita RemoteConfig] fetch API is not available in this environment.');
+        console.warn('[Apperio RemoteConfig] fetch API is not available in this environment.');
         return null;
       }
 
@@ -100,7 +100,7 @@ export class RemoteConfigManager {
 
       if (!response.ok) {
         console.warn(
-          `[Monita RemoteConfig] Config fetch failed with status ${response.status}.`
+          `[Apperio RemoteConfig] Config fetch failed with status ${response.status}.`
         );
         return null;
       }
@@ -118,7 +118,7 @@ export class RemoteConfigManager {
 
       return config;
     } catch (error) {
-      console.warn('[Monita RemoteConfig] Failed to fetch remote config:', error);
+      console.warn('[Apperio RemoteConfig] Failed to fetch remote config:', error);
       return null;
     }
   }

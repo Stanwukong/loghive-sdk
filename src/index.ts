@@ -1,8 +1,8 @@
-import { Monita } from './logger';
+import { Apperio } from './logger';
 import { LoggerConfig } from './types';
 
 // src/index.ts
-export { Monita } from './logger';
+export { Apperio } from './logger';
 export {
   LoggerConfig,
   LogEntry,
@@ -75,5 +75,5 @@ export {
 
 // Convenience function for quick setup
 export const createLogger = (config: LoggerConfig) => {
-  return new Monita(config);
+  return new Apperio(config);
 };

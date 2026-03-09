@@ -1,12 +1,12 @@
 // src/advanced-features.ts
-import { Monita } from './logger';
+import { Apperio } from './logger';
 
 // Context Manager for dynamic context updates
 export class ContextManager {
-  private logger: Monita;
+  private logger: Apperio;
   private contextStack: Record<string, any>[] = [];
 
-  constructor(logger: Monita) {
+  constructor(logger: Apperio) {
     this.logger = logger;
   }
 
@@ -92,9 +92,9 @@ export class RateLimiter {
 export class SessionManager {
   private sessionId: string;
   private sessionStart: number;
-  private logger: Monita;
+  private logger: Apperio;
 
-  constructor(logger: Monita) {
+  constructor(logger: Apperio) {
     this.logger = logger;
     this.sessionId = this.generateSessionId();
     this.sessionStart = Date.now();
@@ -150,10 +150,10 @@ export class SessionManager {
 
 // Custom Event Tracker
 export class CustomEventTracker {
-  private logger: Monita;
+  private logger: Apperio;
   private rateLimiter: RateLimiter;
 
-  constructor(logger: Monita) {
+  constructor(logger: Apperio) {
     this.logger = logger;
     this.rateLimiter = new RateLimiter(50, 60000); // 50 events per minute
   }
@@ -207,10 +207,10 @@ export class CustomEventTracker {
 
 // Feature Flag Integration
 export class FeatureFlagLogger {
-  private logger: Monita;
+  private logger: Apperio;
   private activeFlags: Map<string, any> = new Map();
 
-  constructor(logger: Monita) {
+  constructor(logger: Apperio) {
     this.logger = logger;
   }
 
@@ -244,10 +244,10 @@ export class FeatureFlagLogger {
 
 // A/B Test Integration
 export class ABTestLogger {
-  private logger: Monita;
+  private logger: Apperio;
   private activeTests: Map<string, string> = new Map();
 
-  constructor(logger: Monita) {
+  constructor(logger: Apperio) {
     this.logger = logger;
   }
 
@@ -284,10 +284,10 @@ export class ABTestLogger {
 
 // Performance Monitoring Extensions
 export class PerformanceMonitor {
-  private logger: Monita;
+  private logger: Apperio;
   private marks: Map<string, number> = new Map();
 
-  constructor(logger: Monita) {
+  constructor(logger: Apperio) {
     this.logger = logger;
   }
 
@@ -343,7 +343,7 @@ export class PerformanceMonitor {
 
 // Export enhanced logger factory
 export function createEnhancedLogger(config: any) {
-  const logger = new Monita(config);
+  const logger = new Apperio(config);
   
   return {
     logger,

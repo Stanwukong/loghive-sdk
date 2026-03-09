@@ -10,7 +10,7 @@ import { TraceContextManager, TraceContext } from './tracing/trace-context';
 import { Span } from './tracing/span';
 import { PatternDetector } from './pattern-detector';
 
-export class Monita {
+export class Apperio {
   private static readonly MAX_BUFFER_SIZE = 1000;
 
   private _config: Required<LoggerConfig>;
@@ -72,10 +72,10 @@ export class Monita {
 
     // Validate required configuration
     if (!this._config.apiKey) {
-      throw new Error('Monita: API Key is required.');
+      throw new Error('Apperio: API Key is required.');
     }
     if (!this._config.projectId) {
-      throw new Error('Monita: Project ID is required.');
+      throw new Error('Apperio: Project ID is required.');
     }
 
     // Axios instance creation with error handling
@@ -93,7 +93,7 @@ export class Monita {
       },
     });
     } catch (error) {
-      console.error('Monita: Failed to create HTTP client:', error)
+      console.error('Apperio: Failed to create HTTP client:', error)
       throw new Error('Axios is not available in this environment')
     } 
 
@@ -115,7 +115,7 @@ export class Monita {
 
   public init(): void {
     if (this._initialized) {
-      console.warn('Monita: Already initialized. Call shutdown() first to re-initialize.');
+      console.warn('Apperio: Already initialized. Call shutdown() first to re-initialize.');
       return;
     }
 
@@ -217,7 +217,7 @@ export class Monita {
 
   public _log(level: LogLevel, message: string, error?: Error, data?: Record<string, any>): void {
     if (this._isShuttingDown) {
-      console.warn(`Monita: Attempted to log "${message}" during shutdown. Log ignored.`);
+      console.warn(`Apperio: Attempted to log "${message}" during shutdown. Log ignored.`);
       return;
     }
 
@@ -316,10 +316,10 @@ export class Monita {
     }
 
     // Prevent unbounded buffer growth
-    if (this._logBuffer.length > Monita.MAX_BUFFER_SIZE) {
-      const dropped = this._logBuffer.length - Monita.MAX_BUFFER_SIZE;
-      this._logBuffer = this._logBuffer.slice(-Monita.MAX_BUFFER_SIZE);
-      console.warn(`Monita: Dropped ${dropped} oldest logs due to buffer overflow.`);
+    if (this._logBuffer.length > Apperio.MAX_BUFFER_SIZE) {
+      const dropped = this._logBuffer.length - Apperio.MAX_BUFFER_SIZE;
+      this._logBuffer = this._logBuffer.slice(-Apperio.MAX_BUFFER_SIZE);
+      console.warn(`Apperio: Dropped ${dropped} oldest logs due to buffer overflow.`);
     }
 
     if (this._logBuffer.length >= this._config.batchSize) {
@@ -398,13 +398,13 @@ export class Monita {
     try {
       await this._sendLogs(logsToSend);
     } catch (err) {
-      console.error('Monita: Failed to send logs after retries. Re-adding to buffer.', err);
+      console.error('Apperio: Failed to send logs after retries. Re-adding to buffer.', err);
       this._logBuffer.unshift(...logsToSend);
       // Prevent unbounded buffer growth
-      if (this._logBuffer.length > Monita.MAX_BUFFER_SIZE) {
-        const dropped = this._logBuffer.length - Monita.MAX_BUFFER_SIZE;
-        this._logBuffer = this._logBuffer.slice(0, Monita.MAX_BUFFER_SIZE);
-        console.warn(`Monita: Dropped ${dropped} oldest logs due to buffer overflow.`);
+      if (this._logBuffer.length > Apperio.MAX_BUFFER_SIZE) {
+        const dropped = this._logBuffer.length - Apperio.MAX_BUFFER_SIZE;
+        this._logBuffer = this._logBuffer.slice(0, Apperio.MAX_BUFFER_SIZE);
+        console.warn(`Apperio: Dropped ${dropped} oldest logs due to buffer overflow.`);
       }
     } finally {
       this._isFlushing = false;
@@ -436,37 +436,37 @@ export class Monita {
         if (response.status >= 200 && response.status < 300) {
           return;
         } else {
-          console.warn(`Monita: API returned status ${response.status} on attempt ${attempt + 1}.`);
+          console.warn(`Apperio: API returned status ${response.status} on attempt ${attempt + 1}.`);
         }
       } catch (error) {
         const axiosError = error as AxiosError;
         
         if (axiosError.response) {
           console.error(
-            `Monita: API Error ${axiosError.response.config.url} on attempt ${attempt + 1}`);
+            `Apperio: API Error ${axiosError.response.config.url} on attempt ${attempt + 1}`);
           
           if (axiosError.response.status >= 400 && axiosError.response.status < 500) {
             if (axiosError.response.status === 401 || axiosError.response.status === 403) {
-              console.error('Monita: Authentication/Authorization failed. Check API Key.');
+              console.error('Apperio: Authentication/Authorization failed. Check API Key.');
             }
-            throw new Error(`Monita: Non-retryable API error: ${axiosError.response.status}`);
+            throw new Error(`Apperio: Non-retryable API error: ${axiosError.response.status}`);
           }
         } else if (axiosError.request) {
-          console.error(`Monita: Network Error on attempt ${attempt + 1}: No response from server.`);
+          console.error(`Apperio: Network Error on attempt ${attempt + 1}: No response from server.`);
         } else {
-          console.error(`Monita: Request setup error on attempt ${attempt + 1}:`, axiosError.message);
-          throw new Error(`Monita: Non-retryable request error: ${axiosError.message}`);
+          console.error(`Apperio: Request setup error on attempt ${attempt + 1}:`, axiosError.message);
+          throw new Error(`Apperio: Non-retryable request error: ${axiosError.message}`);
         }
       }
 
       if (attempt < this._config.maxRetries) {
         const retryDelay = getExponentialBackoffDelay(attempt, this._config.retryDelayMs);
-        console.warn(`Monita: Retrying in ${retryDelay}ms... (Attempt ${attempt + 1} of ${this._config.maxRetries})`);
+        console.warn(`Apperio: Retrying in ${retryDelay}ms... (Attempt ${attempt + 1} of ${this._config.maxRetries})`);
         await delay(retryDelay);
       }
     }
     
-    throw new Error(`Monita: Failed to send log after ${this._config.maxRetries} retries.`);
+    throw new Error(`Apperio: Failed to send log after ${this._config.maxRetries} retries.`);
   }
 
   // Data sanitization methods
@@ -584,9 +584,9 @@ export class Monita {
       this._beforeUnloadHandler = null;
     }
 
-    console.log('Monita: Shutting down. Flushing remaining logs...');
+    console.log('Apperio: Shutting down. Flushing remaining logs...');
     await this.flush();
-    console.log('Monita: Shutdown complete.');
+    console.log('Apperio: Shutdown complete.');
 
     this._initialized = false;
     this._isShuttingDown = false;

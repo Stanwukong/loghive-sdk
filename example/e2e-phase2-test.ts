@@ -1,5 +1,5 @@
 /**
- * Monita SDK Phase 2 -- End-to-End Test Script
+ * Apperio SDK Phase 2 -- End-to-End Test Script
  *
  * Exercises ALL Phase 2 public APIs:
  *   - Distributed Tracing (startTrace, createChildSpan, endTrace, getCurrentTrace)
@@ -18,7 +18,7 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 import {
-  Monita,
+  Apperio,
   LogLevel,
   BreadcrumbManager,
   Breadcrumb,
@@ -68,7 +68,7 @@ async function main(): Promise<void> {
   // -----------------------------------------------------------------------
   sectionHeader("Section 1: Initialization");
 
-  const logger = new Monita({
+  const logger = new Apperio({
     apiKey: API_KEY!,
     projectId: PROJECT_ID!,
     endpoint: ENDPOINT!,
@@ -76,7 +76,7 @@ async function main(): Promise<void> {
     batchSize: 3,
     flushIntervalMs: 2000,
     environment: "e2e-testing",
-    serviceName: "monita-e2e-test",
+    serviceName: "apperio-e2e-test",
     release: "2.0.0-rc1",
     tracing: { enabled: true },
     remoteConfig: { enabled: true, refreshIntervalMs: 60000 },

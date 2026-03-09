@@ -874,7 +874,7 @@ function generateOtherEvents(): Record<string, any>[] {
 
 async function main() {
   console.log("==========================================================");
-  console.log("  Monita Database Seed Script");
+  console.log("  Apperio Database Seed Script");
   console.log("==========================================================");
   console.log(`  Endpoint : ${LOG_URL}`);
   console.log(`  Project  : ${PROJECT_ID}`);

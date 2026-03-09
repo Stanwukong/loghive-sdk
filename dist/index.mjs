@@ -1271,13 +1271,13 @@ var OfflineManager = class {
       this.config.onSyncComplete?.(logsToFlush.length);
     } catch (error) {
       console.warn(
-        `[Monita OfflineManager] Failed to flush ${logsToFlush.length} queued logs. Re-queuing.`
+        `[Apperio OfflineManager] Failed to flush ${logsToFlush.length} queued logs. Re-queuing.`
       );
       const combined = [...logsToFlush, ...this.queue];
       this.queue = combined.slice(0, this.config.maxQueueSize);
       if (combined.length > this.config.maxQueueSize) {
         console.warn(
-          `[Monita OfflineManager] Dropped ${combined.length - this.config.maxQueueSize} logs due to queue overflow during re-queue.`
+          `[Apperio OfflineManager] Dropped ${combined.length - this.config.maxQueueSize} logs due to queue overflow during re-queue.`
         );
       }
     } finally {
@@ -1351,7 +1351,7 @@ var RemoteConfigManager = class {
     const url = this.getEndpoint();
     try {
       if (typeof fetch === "undefined") {
-        console.warn("[Monita RemoteConfig] fetch API is not available in this environment.");
+        console.warn("[Apperio RemoteConfig] fetch API is not available in this environment.");
         return null;
       }
       const response = await fetch(url, {
@@ -1363,7 +1363,7 @@ var RemoteConfigManager = class {
       });
       if (!response.ok) {
         console.warn(
-          `[Monita RemoteConfig] Config fetch failed with status ${response.status}.`
+          `[Apperio RemoteConfig] Config fetch failed with status ${response.status}.`
         );
         return null;
       }
@@ -1374,7 +1374,7 @@ var RemoteConfigManager = class {
       this.applyCallback?.(config);
       return config;
     } catch (error) {
-      console.warn("[Monita RemoteConfig] Failed to fetch remote config:", error);
+      console.warn("[Apperio RemoteConfig] Failed to fetch remote config:", error);
       return null;
     }
   }
@@ -1676,7 +1676,7 @@ var PatternDetector = class {
 };
 
 // src/logger.ts
-var _Monita = class _Monita {
+var _Apperio = class _Apperio {
   constructor(config) {
     this._logBuffer = [];
     this._context = {};
@@ -1728,10 +1728,10 @@ var _Monita = class _Monita {
       onPatternDetected: config.onPatternDetected || void 0
     };
     if (!this._config.apiKey) {
-      throw new Error("Monita: API Key is required.");
+      throw new Error("Apperio: API Key is required.");
     }
     if (!this._config.projectId) {
-      throw new Error("Monita: Project ID is required.");
+      throw new Error("Apperio: Project ID is required.");
     }
     try {
       if (typeof axios === "undefined") {
@@ -1745,7 +1745,7 @@ var _Monita = class _Monita {
         }
       });
     } catch (error) {
-      console.error("Monita: Failed to create HTTP client:", error);
+      console.error("Apperio: Failed to create HTTP client:", error);
       throw new Error("Axios is not available in this environment");
     }
     this._autoInstrumentation = new AutoInstrumentation(this);
@@ -1758,7 +1758,7 @@ var _Monita = class _Monita {
   }
   init() {
     if (this._initialized) {
-      console.warn("Monita: Already initialized. Call shutdown() first to re-initialize.");
+      console.warn("Apperio: Already initialized. Call shutdown() first to re-initialize.");
       return;
     }
     this._initialized = true;
@@ -1834,7 +1834,7 @@ var _Monita = class _Monita {
   }
   _log(level, message, error, data) {
     if (this._isShuttingDown) {
-      console.warn(`Monita: Attempted to log "${message}" during shutdown. Log ignored.`);
+      console.warn(`Apperio: Attempted to log "${message}" during shutdown. Log ignored.`);
       return;
     }
     if (!shouldLog(level, this._config.minLogLevel)) {
@@ -1904,10 +1904,10 @@ var _Monita = class _Monita {
         this._logBuffer.push(patternEntry);
       }
     }
-    if (this._logBuffer.length > _Monita.MAX_BUFFER_SIZE) {
-      const dropped = this._logBuffer.length - _Monita.MAX_BUFFER_SIZE;
-      this._logBuffer = this._logBuffer.slice(-_Monita.MAX_BUFFER_SIZE);
-      console.warn(`Monita: Dropped ${dropped} oldest logs due to buffer overflow.`);
+    if (this._logBuffer.length > _Apperio.MAX_BUFFER_SIZE) {
+      const dropped = this._logBuffer.length - _Apperio.MAX_BUFFER_SIZE;
+      this._logBuffer = this._logBuffer.slice(-_Apperio.MAX_BUFFER_SIZE);
+      console.warn(`Apperio: Dropped ${dropped} oldest logs due to buffer overflow.`);
     }
     if (this._logBuffer.length >= this._config.batchSize) {
       this.flush();
@@ -1973,12 +1973,12 @@ var _Monita = class _Monita {
     try {
       await this._sendLogs(logsToSend);
     } catch (err) {
-      console.error("Monita: Failed to send logs after retries. Re-adding to buffer.", err);
+      console.error("Apperio: Failed to send logs after retries. Re-adding to buffer.", err);
       this._logBuffer.unshift(...logsToSend);
-      if (this._logBuffer.length > _Monita.MAX_BUFFER_SIZE) {
-        const dropped = this._logBuffer.length - _Monita.MAX_BUFFER_SIZE;
-        this._logBuffer = this._logBuffer.slice(0, _Monita.MAX_BUFFER_SIZE);
-        console.warn(`Monita: Dropped ${dropped} oldest logs due to buffer overflow.`);
+      if (this._logBuffer.length > _Apperio.MAX_BUFFER_SIZE) {
+        const dropped = this._logBuffer.length - _Apperio.MAX_BUFFER_SIZE;
+        this._logBuffer = this._logBuffer.slice(0, _Apperio.MAX_BUFFER_SIZE);
+        console.warn(`Apperio: Dropped ${dropped} oldest logs due to buffer overflow.`);
       }
     } finally {
       this._isFlushing = false;
@@ -2003,34 +2003,34 @@ var _Monita = class _Monita {
         if (response.status >= 200 && response.status < 300) {
           return;
         } else {
-          console.warn(`Monita: API returned status ${response.status} on attempt ${attempt + 1}.`);
+          console.warn(`Apperio: API returned status ${response.status} on attempt ${attempt + 1}.`);
         }
       } catch (error) {
         const axiosError = error;
         if (axiosError.response) {
           console.error(
-            `Monita: API Error ${axiosError.response.config.url} on attempt ${attempt + 1}`
+            `Apperio: API Error ${axiosError.response.config.url} on attempt ${attempt + 1}`
           );
           if (axiosError.response.status >= 400 && axiosError.response.status < 500) {
             if (axiosError.response.status === 401 || axiosError.response.status === 403) {
-              console.error("Monita: Authentication/Authorization failed. Check API Key.");
+              console.error("Apperio: Authentication/Authorization failed. Check API Key.");
             }
-            throw new Error(`Monita: Non-retryable API error: ${axiosError.response.status}`);
+            throw new Error(`Apperio: Non-retryable API error: ${axiosError.response.status}`);
           }
         } else if (axiosError.request) {
-          console.error(`Monita: Network Error on attempt ${attempt + 1}: No response from server.`);
+          console.error(`Apperio: Network Error on attempt ${attempt + 1}: No response from server.`);
         } else {
-          console.error(`Monita: Request setup error on attempt ${attempt + 1}:`, axiosError.message);
-          throw new Error(`Monita: Non-retryable request error: ${axiosError.message}`);
+          console.error(`Apperio: Request setup error on attempt ${attempt + 1}:`, axiosError.message);
+          throw new Error(`Apperio: Non-retryable request error: ${axiosError.message}`);
         }
       }
       if (attempt < this._config.maxRetries) {
         const retryDelay = getExponentialBackoffDelay(attempt, this._config.retryDelayMs);
-        console.warn(`Monita: Retrying in ${retryDelay}ms... (Attempt ${attempt + 1} of ${this._config.maxRetries})`);
+        console.warn(`Apperio: Retrying in ${retryDelay}ms... (Attempt ${attempt + 1} of ${this._config.maxRetries})`);
         await delay(retryDelay);
       }
     }
-    throw new Error(`Monita: Failed to send log after ${this._config.maxRetries} retries.`);
+    throw new Error(`Apperio: Failed to send log after ${this._config.maxRetries} retries.`);
   }
   // Data sanitization methods
   getSanitizationConfig() {
@@ -2122,15 +2122,15 @@ var _Monita = class _Monita {
       window.removeEventListener("beforeunload", this._beforeUnloadHandler);
       this._beforeUnloadHandler = null;
     }
-    console.log("Monita: Shutting down. Flushing remaining logs...");
+    console.log("Apperio: Shutting down. Flushing remaining logs...");
     await this.flush();
-    console.log("Monita: Shutdown complete.");
+    console.log("Apperio: Shutdown complete.");
     this._initialized = false;
     this._isShuttingDown = false;
   }
 };
-_Monita.MAX_BUFFER_SIZE = 1e3;
-var Monita = _Monita;
+_Apperio.MAX_BUFFER_SIZE = 1e3;
+var Apperio = _Apperio;
 
 // src/circuit-breaker.ts
 var CircuitBreakerState = /* @__PURE__ */ ((CircuitBreakerState2) => {
@@ -2653,7 +2653,7 @@ var HealthMetricsCollector = class {
   getHealthSummary() {
     const metrics = this.getMetrics();
     return `
-Monita SDK Health Metrics
+Apperio SDK Health Metrics
 ==========================
 Uptime: ${metrics.uptime}s
 Buffer: ${metrics.currentBufferSize} logs (peak: ${metrics.bufferHighWatermark})
@@ -2726,9 +2726,9 @@ var TracePropagator = class {
 
 // src/index.ts
 var createLogger = (config) => {
-  return new Monita(config);
+  return new Apperio(config);
 };
 
-export { AutoInstrumentation, BreadcrumbManager, CircuitBreaker, CircuitBreakerState, DataSanitizer, HealthMetricsCollector, LogLevel, Monita, OfflineManager, PII_PATTERNS, PatternDetector, RemoteConfigManager, SANITIZATION_PRESETS, Span, TraceContextManager, TracePropagator, compressPayload, createDataSanitizer, createLogger, preparePayloadForTransmission, uint8ArrayToBase64 };
+export { Apperio, AutoInstrumentation, BreadcrumbManager, CircuitBreaker, CircuitBreakerState, DataSanitizer, HealthMetricsCollector, LogLevel, OfflineManager, PII_PATTERNS, PatternDetector, RemoteConfigManager, SANITIZATION_PRESETS, Span, TraceContextManager, TracePropagator, compressPayload, createDataSanitizer, createLogger, preparePayloadForTransmission, uint8ArrayToBase64 };
 //# sourceMappingURL=index.mjs.map
 //# sourceMappingURL=index.mjs.map

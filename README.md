@@ -1,25 +1,25 @@
-# Monita SDK
+# Apperio SDK
 
-**The JavaScript/TypeScript SDK for the Monita observability platform.**
+**The JavaScript/TypeScript SDK for the Apperio observability platform.**
 
-Monita helps you understand what's happening inside your application. Think of it like a security camera for your code: it records what happens, when something goes wrong, and why — so you can fix problems faster and build better software.
+Apperio helps you understand what's happening inside your application. Think of it like a security camera for your code: it records what happens, when something goes wrong, and why — so you can fix problems faster and build better software.
 
 ```bash
-npm install monita
+npm install apperio
 ```
 
 ```typescript
-import { Monita } from 'monita';
+import { Apperio } from 'apperio';
 
-const logger = new Monita({
+const logger = new Apperio({
   apiKey: 'your-api-key',
   projectId: 'your-project-id',
 });
 
-logger.info('Hello from Monita!');
+logger.info('Hello from Apperio!');
 ```
 
-That's it. Three lines of code and your app is sending logs to the Monita dashboard.
+That's it. Three lines of code and your app is sending logs to the Apperio dashboard.
 
 ---
 
@@ -70,15 +70,15 @@ That's it. Three lines of code and your app is sending logs to the Monita dashbo
 
 ## What Does This SDK Do?
 
-When you add Monita to your app, it does several things:
+When you add Apperio to your app, it does several things:
 
-1. **Sends logs** — You write `logger.info('User signed up')` and that message appears in your Monita dashboard, searchable and filterable.
-2. **Catches errors automatically** — If your app crashes or something breaks, Monita captures the error with a full stack trace so you can see exactly what went wrong.
-3. **Tracks performance** — How fast do your pages load? How long do API calls take? Monita measures this and tells you when things get slow.
+1. **Sends logs** — You write `logger.info('User signed up')` and that message appears in your Apperio dashboard, searchable and filterable.
+2. **Catches errors automatically** — If your app crashes or something breaks, Apperio captures the error with a full stack trace so you can see exactly what went wrong.
+3. **Tracks performance** — How fast do your pages load? How long do API calls take? Apperio measures this and tells you when things get slow.
 4. **Monitors network requests** — Every `fetch()` and `XMLHttpRequest` your app makes gets logged with status codes, timing, and URLs.
-5. **Protects private data** — Emails, credit cards, passwords — Monita automatically detects and redacts sensitive information before it leaves the browser.
+5. **Protects private data** — Emails, credit cards, passwords — Apperio automatically detects and redacts sensitive information before it leaves the browser.
 6. **Works offline** — If the user's internet drops, logs are queued in memory and sent when connectivity returns.
-7. **Detects patterns** — If the same error happens 3+ times in 5 minutes, or error rates spike, Monita flags it automatically.
+7. **Detects patterns** — If the same error happens 3+ times in 5 minutes, or error rates spike, Apperio flags it automatically.
 
 ---
 
@@ -86,13 +86,13 @@ When you add Monita to your app, it does several things:
 
 ```bash
 # npm
-npm install monita
+npm install apperio
 
 # yarn
-yarn add monita
+yarn add apperio
 
 # pnpm
-pnpm add monita
+pnpm add apperio
 ```
 
 **Requirements:**
@@ -100,8 +100,8 @@ pnpm add monita
 - TypeScript 5+ (optional but recommended)
 
 The SDK ships as both CommonJS and ESModule:
-- `require('monita')` works in Node.js
-- `import { Monita } from 'monita'` works in bundlers and modern environments
+- `require('apperio')` works in Node.js
+- `import { Apperio } from 'apperio'` works in bundlers and modern environments
 
 ---
 
@@ -109,14 +109,14 @@ The SDK ships as both CommonJS and ESModule:
 
 ### Step 1: Get your credentials
 
-Log in to the [Monita dashboard](https://loghive.vercel.app). Create a project. Copy your **API Key** and **Project ID** from the project settings page.
+Log in to the [Apperio dashboard](https://loghive.vercel.app). Create a project. Copy your **API Key** and **Project ID** from the project settings page.
 
 ### Step 2: Initialize the logger
 
 ```typescript
-import { Monita } from 'monita';
+import { Apperio } from 'apperio';
 
-const logger = new Monita({
+const logger = new Apperio({
   apiKey: 'your-api-key',       // From your project settings
   projectId: 'your-project-id', // From your project settings
 });
@@ -132,7 +132,7 @@ logger.error('Payment failed', new Error('Card declined'));
 
 ### Step 4: View in the dashboard
 
-Open your Monita dashboard. Your logs appear in real-time, searchable by level, message, time, and any custom data you attach.
+Open your Apperio dashboard. Your logs appear in real-time, searchable by level, message, time, and any custom data you attach.
 
 ---
 
@@ -141,7 +141,7 @@ Open your Monita dashboard. Your logs appear in real-time, searchable by level, 
 ### Minimal Configuration (2 required fields)
 
 ```typescript
-const logger = new Monita({
+const logger = new Apperio({
   apiKey: 'your-api-key',
   projectId: 'your-project-id',
 });
@@ -152,9 +152,9 @@ const logger = new Monita({
 Every option below is optional except `apiKey` and `projectId`.
 
 ```typescript
-import { Monita, LogLevel } from 'monita';
+import { Apperio, LogLevel } from 'apperio';
 
-const logger = new Monita({
+const logger = new Apperio({
   // --- Required ---
   apiKey: 'your-api-key',
   projectId: 'your-project-id',
@@ -238,7 +238,7 @@ A common pattern is to change settings based on whether you're in development or
 ```typescript
 const isProd = process.env.NODE_ENV === 'production';
 
-const logger = new Monita({
+const logger = new Apperio({
   apiKey: process.env.MONITA_API_KEY!,
   projectId: process.env.MONITA_PROJECT_ID!,
   environment: process.env.NODE_ENV,
@@ -267,7 +267,7 @@ const logger = new Monita({
 
 ### Log Levels
 
-Monita has 6 log levels, ranked from least to most severe:
+Apperio has 6 log levels, ranked from least to most severe:
 
 | Level | When to use it | Example |
 |-------|---------------|---------|
@@ -313,7 +313,7 @@ logger.warn('Slow database query', {
 
 ### Logging Errors
 
-When something goes wrong, pass the Error object as the second argument. Monita extracts the name, message, and stack trace automatically.
+When something goes wrong, pass the Error object as the second argument. Apperio extracts the name, message, and stack trace automatically.
 
 ```typescript
 try {
@@ -510,10 +510,10 @@ logger.info('User data', { email: 'john@example.com', password: 'hunter2' });
 ### Sanitization Presets
 
 ```typescript
-import { SANITIZATION_PRESETS } from 'monita';
+import { SANITIZATION_PRESETS } from 'apperio';
 
 // STRICT — Redacts everything, 7-day retention, full audit trail
-const logger = new Monita({
+const logger = new Apperio({
   apiKey: '...',
   projectId: '...',
   sanitization: { enabled: true, config: SANITIZATION_PRESETS.STRICT },
@@ -523,7 +523,7 @@ const logger = new Monita({
 // (This is what you get if you don't configure anything.)
 
 // LENIENT — Only redacts critical patterns (SSN, credit cards, API keys). 90-day retention.
-const devLogger = new Monita({
+const devLogger = new Apperio({
   apiKey: '...',
   projectId: '...',
   sanitization: { enabled: true, config: SANITIZATION_PRESETS.LENIENT },
@@ -566,7 +566,7 @@ logger.clearAuditTrail();
 When a user's internet connection drops, the SDK queues logs in memory and sends them when connectivity returns.
 
 ```typescript
-const logger = new Monita({
+const logger = new Apperio({
   apiKey: '...',
   projectId: '...',
   offline: {
@@ -595,7 +595,7 @@ How it works:
 Distributed tracing lets you follow a request as it moves through different services. Each trace gets a unique ID that connects related logs across your frontend, backend, and microservices.
 
 ```typescript
-const logger = new Monita({
+const logger = new Apperio({
   apiKey: '...',
   projectId: '...',
   tracing: { enabled: true },
@@ -626,7 +626,7 @@ When tracing is active, every log entry includes `traceId` and `spanId` fields. 
 The SDK automatically watches for error patterns on the client side. No server calls required — it runs entirely in the browser.
 
 ```typescript
-const logger = new Monita({
+const logger = new Apperio({
   apiKey: '...',
   projectId: '...',
   enablePatternDetection: true, // Default: true
@@ -654,7 +654,7 @@ Pattern events are logged at `INFO` level and throttled to at most 1 per pattern
 Change SDK settings from the server without redeploying your app.
 
 ```typescript
-const logger = new Monita({
+const logger = new Apperio({
   apiKey: '...',
   projectId: '...',
   remoteConfig: {
@@ -682,9 +682,9 @@ The SDK fetches config immediately on init, then polls at the configured interva
 
 ```typescript
 // lib/logger.ts
-import { Monita, LogLevel } from 'monita';
+import { Apperio, LogLevel } from 'apperio';
 
-export const logger = new Monita({
+export const logger = new Apperio({
   apiKey: process.env.REACT_APP_MONITA_API_KEY!,
   projectId: process.env.REACT_APP_MONITA_PROJECT_ID!,
   environment: process.env.NODE_ENV,
@@ -737,9 +737,9 @@ function App() {
 
 ```typescript
 // lib/logger.ts
-import { Monita } from 'monita';
+import { Apperio } from 'apperio';
 
-export const logger = new Monita({
+export const logger = new Apperio({
   apiKey: process.env.NEXT_PUBLIC_MONITA_API_KEY!,
   projectId: process.env.NEXT_PUBLIC_MONITA_PROJECT_ID!,
   environment: process.env.NODE_ENV,
@@ -760,7 +760,7 @@ export const logger = new Monita({
 import { useEffect } from 'react';
 import { logger } from '@/lib/logger';
 
-export function MonitaProvider({ children }: { children: React.ReactNode }) {
+export function ApperioProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     logger.info('App loaded', { url: window.location.href });
 
@@ -800,9 +800,9 @@ export async function GET(request: Request) {
 
 ```typescript
 // plugins/logger.ts
-import { Monita } from 'monita';
+import { Apperio } from 'apperio';
 
-export const logger = new Monita({
+export const logger = new Apperio({
   apiKey: import.meta.env.VITE_MONITA_API_KEY,
   projectId: import.meta.env.VITE_MONITA_PROJECT_ID,
   environment: import.meta.env.MODE,
@@ -839,11 +839,11 @@ app.mount('#app');
 
 ```typescript
 import express from 'express';
-import { Monita } from 'monita';
+import { Apperio } from 'apperio';
 
 const app = express();
 
-const logger = new Monita({
+const logger = new Apperio({
   apiKey: process.env.MONITA_API_KEY!,
   projectId: process.env.MONITA_PROJECT_ID!,
   environment: process.env.NODE_ENV,
@@ -894,9 +894,9 @@ process.on('SIGTERM', async () => {
 ### Plain Node.js
 
 ```typescript
-import { Monita } from 'monita';
+import { Apperio } from 'apperio';
 
-const logger = new Monita({
+const logger = new Apperio({
   apiKey: process.env.MONITA_API_KEY!,
   projectId: process.env.MONITA_PROJECT_ID!,
   environment: process.env.NODE_ENV || 'development',
@@ -1152,13 +1152,13 @@ All original functions are restored when `shutdown()` is called.
 
 ## Troubleshooting
 
-### "Monita: API Key is required"
+### "Apperio: API Key is required"
 
 You forgot to pass `apiKey` to the constructor.
 
 ```typescript
 // Fix: Provide your API key
-const logger = new Monita({
+const logger = new Apperio({
   apiKey: 'your-api-key',        // <-- required
   projectId: 'your-project-id',  // <-- required
 });
@@ -1190,7 +1190,7 @@ autoCapture: {
 Lower the verbosity:
 
 ```typescript
-const logger = new Monita({
+const logger = new Apperio({
   apiKey: '...',
   projectId: '...',
   minLogLevel: LogLevel.WARN,  // Only WARN, ERROR, FATAL
@@ -1207,11 +1207,11 @@ const logger = new Monita({
 });
 ```
 
-### "Monita: Authentication/Authorization failed. Check API Key."
+### "Apperio: Authentication/Authorization failed. Check API Key."
 
-Your API key is invalid or expired. Get a new one from the Monita dashboard under Project Settings.
+Your API key is invalid or expired. Get a new one from the Apperio dashboard under Project Settings.
 
-### "Monita: Failed to send logs after retries. Re-adding to buffer."
+### "Apperio: Failed to send logs after retries. Re-adding to buffer."
 
 The SDK couldn't reach the backend after 3 attempts. Common causes:
 - Backend is down or unreachable
@@ -1225,7 +1225,7 @@ The logs are re-queued and will be retried on the next flush cycle.
 Increase batch size and reduce flush frequency:
 
 ```typescript
-const logger = new Monita({
+const logger = new Apperio({
   apiKey: '...',
   projectId: '...',
   batchSize: 50,          // Fewer HTTP requests

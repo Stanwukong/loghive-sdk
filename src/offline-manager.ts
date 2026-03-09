@@ -3,7 +3,7 @@
 /**
  * Offline Manager
  *
- * Provides in-memory offline log queuing for the Monita SDK.
+ * Provides in-memory offline log queuing for the Apperio SDK.
  * When the browser goes offline, logs are enqueued and automatically
  * flushed when connectivity is restored.
  *
@@ -137,7 +137,7 @@ export class OfflineManager {
     } catch (error) {
       // Flush failed: re-queue the logs respecting the size cap
       console.warn(
-        `[Monita OfflineManager] Failed to flush ${logsToFlush.length} queued logs. Re-queuing.`
+        `[Apperio OfflineManager] Failed to flush ${logsToFlush.length} queued logs. Re-queuing.`
       );
 
       // Prepend the failed logs back, then trim to maxQueueSize
@@ -146,7 +146,7 @@ export class OfflineManager {
 
       if (combined.length > this.config.maxQueueSize) {
         console.warn(
-          `[Monita OfflineManager] Dropped ${combined.length - this.config.maxQueueSize} logs due to queue overflow during re-queue.`
+          `[Apperio OfflineManager] Dropped ${combined.length - this.config.maxQueueSize} logs due to queue overflow during re-queue.`
         );
       }
     } finally {

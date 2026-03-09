@@ -43,7 +43,7 @@ export function findMapFiles(dir: string): string[] {
 }
 
 /**
- * Upload source map files to the Monita server for a given release.
+ * Upload source map files to the Apperio server for a given release.
  *
  * Discovers all `.map` files under `sourceMapDir`, reads their content,
  * and POSTs each one to the sourcemaps ingestion endpoint. Progress is
@@ -68,19 +68,19 @@ export async function uploadSourceMaps(options: UploadOptions): Promise<UploadRe
   const resolvedDir = path.resolve(sourceMapDir);
 
   if (!fs.existsSync(resolvedDir)) {
-    console.error(`[monita] Source map directory not found: ${resolvedDir}`);
+    console.error(`[apperio] Source map directory not found: ${resolvedDir}`);
     return result;
   }
 
   const mapFiles = findMapFiles(resolvedDir);
 
   if (mapFiles.length === 0) {
-    console.warn(`[monita] No .map files found in: ${resolvedDir}`);
+    console.warn(`[apperio] No .map files found in: ${resolvedDir}`);
     return result;
   }
 
-  console.log(`[monita] Found ${mapFiles.length} source map file(s) in ${resolvedDir}`);
-  console.log(`[monita] Uploading for release "${release}" to project "${projectId}"`);
+  console.log(`[apperio] Found ${mapFiles.length} source map file(s) in ${resolvedDir}`);
+  console.log(`[apperio] Uploading for release "${release}" to project "${projectId}"`);
 
   const uploadUrl = `${endpoint.replace(/\/+$/, '')}/${projectId}/sourcemaps`;
 
@@ -97,7 +97,7 @@ export async function uploadSourceMaps(options: UploadOptions): Promise<UploadRe
         sourceMap: content,
       });
 
-      console.log(`[monita]   Uploading ${relativePath} (${formatBytes(fileSize)})...`);
+      console.log(`[apperio]   Uploading ${relativePath} (${formatBytes(fileSize)})...`);
 
       const response = await fetch(uploadUrl, {
         method: 'POST',
@@ -115,16 +115,16 @@ export async function uploadSourceMaps(options: UploadOptions): Promise<UploadRe
 
       result.uploaded.push(relativePath);
       result.totalSize += fileSize;
-      console.log(`[monita]   Uploaded ${relativePath}`);
+      console.log(`[apperio]   Uploaded ${relativePath}`);
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
-      console.error(`[monita]   Failed to upload ${relativePath}: ${message}`);
+      console.error(`[apperio]   Failed to upload ${relativePath}: ${message}`);
       result.failed.push(relativePath);
     }
   }
 
   console.log(
-    `[monita] Upload complete: ${result.uploaded.length} succeeded, ` +
+    `[apperio] Upload complete: ${result.uploaded.length} succeeded, ` +
     `${result.failed.length} failed, ${formatBytes(result.totalSize)} total`
   );
 

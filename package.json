@@ -1,7 +1,7 @@
 {
-  "name": "monita",
+  "name": "apperio",
   "version": "1.2.2",
-  "description": "This is a Node.js SDK that sends metrics to the LogHive platform.",
+  "description": "This is a Node.js SDK that sends metrics to the Apperio platform.",
   "main": "dist/index.cjs",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -30,20 +30,32 @@
   },
   "files": [
     "dist/index.cjs",
+    "dist/index.cjs.map",
     "dist/index.mjs",
+    "dist/index.mjs.map",
     "dist/index.d.ts",
     "dist/index.d.mts"
   ],
   "keywords": [
     "logger",
-    "loghive",
     "metrics",
     "monitor",
     "track",
-    "monita",
+    "apperio",
     "sdk",
     "logging"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Stanwukong/loghive-sdk.git"
+  },
+  "homepage": "https://github.com/Stanwukong/loghive-sdk#readme",
+  "bugs": {
+    "url": "https://github.com/Stanwukong/loghive-sdk/issues"
+  },
+  "publishConfig": {
+    "@stanwukong:registry": "https://npm.pkg.github.com"
+  },
   "author": "Stanwukong",
   "license": "MIT",
   "devDependencies": {

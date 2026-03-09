@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Monita SDK includes enterprise-grade data sanitization capabilities to protect sensitive information and ensure compliance with privacy regulations like GDPR, CCPA, and HIPAA. The sanitization system automatically detects and redacts personally identifiable information (PII), financial data, and authentication tokens from your logs.
+The Apperio SDK includes enterprise-grade data sanitization capabilities to protect sensitive information and ensure compliance with privacy regulations like GDPR, CCPA, and HIPAA. The sanitization system automatically detects and redacts personally identifiable information (PII), financial data, and authentication tokens from your logs.
 
 ## Features
 
@@ -20,9 +20,9 @@ The Monita SDK includes enterprise-grade data sanitization capabilities to prote
 ### Basic Usage
 
 ```typescript
-import { Monita, SANITIZATION_PRESETS } from 'monita';
+import { Apperio, SANITIZATION_PRESETS } from 'apperio';
 
-const logger = new Monita({
+const logger = new Apperio({
   apiKey: 'your-api-key',
   projectId: 'your-project-id',
   sanitization: {
@@ -46,10 +46,10 @@ logger.info('User registration', {
 ### Predefined Configurations
 
 ```typescript
-import { SANITIZATION_PRESETS } from 'monita';
+import { SANITIZATION_PRESETS } from 'apperio';
 
 // Strict configuration for highly sensitive data
-const strictLogger = new Monita({
+const strictLogger = new Apperio({
   // ... other config
   sanitization: {
     enabled: true,
@@ -58,7 +58,7 @@ const strictLogger = new Monita({
 });
 
 // Balanced configuration for general enterprise use
-const balancedLogger = new Monita({
+const balancedLogger = new Apperio({
   // ... other config
   sanitization: {
     enabled: true,
@@ -67,7 +67,7 @@ const balancedLogger = new Monita({
 });
 
 // Lenient configuration for development/testing
-const lenientLogger = new Monita({
+const lenientLogger = new Apperio({
   // ... other config
   sanitization: {
     enabled: true,
@@ -143,7 +143,7 @@ The SDK includes comprehensive patterns for detecting sensitive data:
 
 ```typescript
 // Add custom rule during initialization
-const logger = new Monita({
+const logger = new Apperio({
   // ... other config
   sanitization: {
     enabled: true,
@@ -185,7 +185,7 @@ console.log('Rule removed:', removed);
 ### Field-based Anonymization
 
 ```typescript
-const logger = new Monita({
+const logger = new Apperio({
   // ... other config
   sanitization: {
     enabled: true,
@@ -218,7 +218,7 @@ logger.info('User data', {
 ### Enabling Audit Trail
 
 ```typescript
-const logger = new Monita({
+const logger = new Apperio({
   // ... other config
   sanitization: {
     enabled: true,
@@ -271,7 +271,7 @@ interface AuditEntry {
 ### Retention Policies
 
 ```typescript
-const logger = new Monita({
+const logger = new Apperio({
   // ... other config
   sanitization: {
     enabled: true,
@@ -328,7 +328,7 @@ logger.updateSanitizationConfig({
 ### Using DataSanitizer Directly
 
 ```typescript
-import { createDataSanitizer, SANITIZATION_PRESETS } from 'monita';
+import { createDataSanitizer, SANITIZATION_PRESETS } from 'apperio';
 
 const sanitizer = createDataSanitizer(SANITIZATION_PRESETS.STRICT);
 
@@ -373,7 +373,7 @@ console.log('Sanitized:', sanitized);
 ### GDPR Compliance
 
 ```typescript
-const gdprLogger = new Monita({
+const gdprLogger = new Apperio({
   // ... other config
   sanitization: {
     enabled: true,
@@ -393,7 +393,7 @@ const gdprLogger = new Monita({
 ### HIPAA Compliance
 
 ```typescript
-const hipaaLogger = new Monita({
+const hipaaLogger = new Apperio({
   // ... other config
   sanitization: {
     enabled: true,
@@ -516,7 +516,7 @@ console.log('Sanitization test:', sanitized);
 
 ```typescript
 // Enable debug logging
-const logger = new Monita({
+const logger = new Apperio({
   // ... other config
   sanitization: {
     enabled: true,
@@ -541,10 +541,10 @@ auditTrail.forEach(entry => {
 1. **Enable sanitization**:
 ```typescript
 // Before
-const logger = new Monita({ apiKey, projectId });
+const logger = new Apperio({ apiKey, projectId });
 
 // After
-const logger = new Monita({ 
+const logger = new Apperio({ 
   apiKey, 
   projectId,
   sanitization: { enabled: true }

@@ -1,16 +1,16 @@
 // tests/logger.test.ts
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { Monita } from "../src/logger";
+import { Apperio } from "../src/logger";
 import { LogLevel } from "../src/types";
 import axios from "axios";
 
 // Mock axios
 vi.mock("axios");
 
-describe("Monita Logger", () => {
+describe("Apperio Logger", () => {
   let mockAxios: any;
-  let logger: Monita;
+  let logger: Apperio;
 
   beforeEach(() => {
     vi.useFakeTimers();
@@ -47,7 +47,7 @@ describe("Monita Logger", () => {
 
   describe("Initialization", () => {
     it("should initialize with required config", () => {
-      logger = new Monita({
+      logger = new Apperio({
         apiKey: "test-api-key",
         projectId: "test-project-id",
       });
@@ -57,7 +57,7 @@ describe("Monita Logger", () => {
 
     it("should throw error if apiKey is missing", () => {
       expect(() => {
-        new Monita({
+        new Apperio({
           projectId: "test-project-id",
         } as any);
       }).toThrow("API Key is required");
@@ -65,14 +65,14 @@ describe("Monita Logger", () => {
 
     it("should throw error if projectId is missing", () => {
       expect(() => {
-        new Monita({
+        new Apperio({
           apiKey: "test-api-key",
         } as any);
       }).toThrow("Project ID is required");
     });
 
     it("should apply default configuration values", () => {
-      logger = new Monita({
+      logger = new Apperio({
         apiKey: "test-api-key",
         projectId: "test-project-id",
       });
@@ -90,7 +90,7 @@ describe("Monita Logger", () => {
     });
 
     it("should allow custom configuration", () => {
-      logger = new Monita({
+      logger = new Apperio({
         apiKey: "test-api-key",
         projectId: "test-project-id",
         endpoint: "https://custom.endpoint.com",
@@ -114,7 +114,7 @@ describe("Monita Logger", () => {
     });
 
     it("should merge autoCapture config with defaults", () => {
-      logger = new Monita({
+      logger = new Apperio({
         apiKey: "test-api-key",
         projectId: "test-project-id",
         autoCapture: {
@@ -132,7 +132,7 @@ describe("Monita Logger", () => {
     });
 
     it("should prevent double initialization", () => {
-      logger = new Monita({
+      logger = new Apperio({
         apiKey: "test-api-key",
         projectId: "test-project-id",
       });
@@ -148,7 +148,7 @@ describe("Monita Logger", () => {
 
   describe("Log Methods", () => {
     beforeEach(() => {
-      logger = new Monita({
+      logger = new Apperio({
         apiKey: "test-api-key",
         projectId: "test-project-id",
         minLogLevel: LogLevel.TRACE, // Allow all levels
@@ -216,7 +216,7 @@ describe("Monita Logger", () => {
     });
 
     it("should respect minLogLevel", () => {
-      const restrictiveLogger = new Monita({
+      const restrictiveLogger = new Apperio({
         apiKey: "test-api-key",
         projectId: "test-project-id",
         minLogLevel: LogLevel.WARN,
@@ -265,7 +265,7 @@ describe("Monita Logger", () => {
 
   describe("Batching", () => {
     beforeEach(() => {
-      logger = new Monita({
+      logger = new Apperio({
         apiKey: "test-api-key",
         projectId: "test-project-id",
         batchSize: 5,
@@ -307,7 +307,7 @@ describe("Monita Logger", () => {
     });
 
     it("should not exceed MAX_BUFFER_SIZE", () => {
-      const maxSize = (Monita as any).MAX_BUFFER_SIZE;
+      const maxSize = (Apperio as any).MAX_BUFFER_SIZE;
 
       // Try to log more than MAX_BUFFER_SIZE
       for (let i = 0; i < maxSize + 100; i++) {
@@ -319,7 +319,7 @@ describe("Monita Logger", () => {
     });
 
     it("should drop oldest logs when buffer is full", () => {
-      const maxSize = (Monita as any).MAX_BUFFER_SIZE;
+      const maxSize = (Apperio as any).MAX_BUFFER_SIZE;
 
       // Fill buffer to max
       for (let i = 0; i < maxSize + 10; i++) {
@@ -337,7 +337,7 @@ describe("Monita Logger", () => {
 
   describe("Context Management", () => {
     beforeEach(() => {
-      logger = new Monita({
+      logger = new Apperio({
         apiKey: "test-api-key",
         projectId: "test-project-id",
         autoCapture: {
@@ -391,7 +391,7 @@ describe("Monita Logger", () => {
 
   describe("Retry Logic", () => {
     beforeEach(() => {
-      logger = new Monita({
+      logger = new Apperio({
         apiKey: "test-api-key",
         projectId: "test-project-id",
         batchSize: 1,
@@ -466,7 +466,7 @@ describe("Monita Logger", () => {
 
   describe("Shutdown", () => {
     beforeEach(() => {
-      logger = new Monita({
+      logger = new Apperio({
         apiKey: "test-api-key",
         projectId: "test-project-id",
         autoCapture: {
@@ -525,7 +525,7 @@ describe("Monita Logger", () => {
 
   describe("captureException", () => {
     beforeEach(() => {
-      logger = new Monita({
+      logger = new Apperio({
         apiKey: "test-api-key",
         projectId: "test-project-id",
         autoCapture: {
@@ -574,7 +574,7 @@ describe("Monita Logger", () => {
 
   describe("captureMessage", () => {
     beforeEach(() => {
-      logger = new Monita({
+      logger = new Apperio({
         apiKey: "test-api-key",
         projectId: "test-project-id",
         autoCapture: {
