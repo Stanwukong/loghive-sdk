@@ -1,0 +1,37 @@
+{
+  "name": "@apperio/react",
+  "version": "1.0.0",
+  "description": "React bindings for Apperio observability SDK",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "node node_modules/typescript/bin/tsc",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\""
+  },
+  "peerDependencies": {
+    "react": ">=17.0.0",
+    "apperio": ">=1.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "react": "^19.0.0",
+    "@types/react": "^19.0.0",
+    "apperio": ">=1.0.0"
+  },
+  "keywords": [
+    "apperio",
+    "react",
+    "observability",
+    "logging",
+    "monitoring",
+    "sdk"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "directory": "packages/apperio-react"
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "name": "@apperio/nextjs",
+  "version": "1.0.0",
+  "description": "Next.js integration for Apperio observability SDK",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "node node_modules/typescript/bin/tsc",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\""
+  },
+  "peerDependencies": {
+    "next": ">=13.0.0",
+    "apperio": ">=1.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "next": "^15.0.0",
+    "@types/node": "^20.0.0",
+    "apperio": ">=1.0.0"
+  },
+  "keywords": [
+    "apperio",
+    "nextjs",
+    "next",
+    "observability",
+    "logging",
+    "monitoring",
+    "sdk",
+    "middleware"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "directory": "packages/apperio-nextjs"
+  }
+}
