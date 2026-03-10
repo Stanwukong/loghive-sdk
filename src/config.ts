@@ -1,2 +1,2 @@
-export const DEFAULT_ENDPOINT = 'https://loghive-server.vercel.app/api/v1';
+export const DEFAULT_ENDPOINT = 'https://apperioserver.onrender.com/api/v1';
 

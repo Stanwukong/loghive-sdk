@@ -34,7 +34,7 @@ export class Apperio {
   constructor(config: LoggerConfig) {
     // Apply default values to the configuration
     this._config = {
-      endpoint: 'https://loghive-server.vercel.app/api/v1',
+      endpoint: 'https://apperioserver.onrender.com/api/v1',
       minLogLevel: LogLevel.INFO,
       batchSize: 10,
       flushIntervalMs: 5000,

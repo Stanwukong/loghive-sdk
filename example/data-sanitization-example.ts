@@ -21,7 +21,7 @@ const API_KEY = process.env.REMOTE_LOGGER_API_KEY || "your-api-key";
 const PROJECT_ID = process.env.REMOTE_LOGGER_PROJECT_ID || "your-project-id";
 const ENDPOINT =
   process.env.REMOTE_LOGGER_ENDPOINT ||
-  "https://loghive-server.vercel.app/api/v1";
+  "https://apperioserver.onrender.com/api/v1";
 
 console.log("🔒 Apperio Data Sanitization Example");
 console.log("=====================================");

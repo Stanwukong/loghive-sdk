@@ -79,7 +79,7 @@ describe("Apperio Logger", () => {
 
       const config = (logger as any)._config;
 
-      expect(config.endpoint).toBe("https://loghive-server.vercel.app/api/v1");
+      expect(config.endpoint).toBe("https://apperioserver.onrender.com/api/v1");
       expect(config.minLogLevel).toBe(LogLevel.INFO);
       expect(config.batchSize).toBe(10);
       expect(config.flushIntervalMs).toBe(5000);

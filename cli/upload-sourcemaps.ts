@@ -15,7 +15,7 @@ export interface UploadResult {
   totalSize: number;
 }
 
-const DEFAULT_ENDPOINT = 'https://loghive-server.vercel.app/api/v1';
+const DEFAULT_ENDPOINT = 'https://apperioserver.onrender.com/api/v1';
 
 /**
  * Recursively find all `.map` files within a directory.

@@ -1772,7 +1772,7 @@ var _Apperio = class _Apperio {
     this._patternDetector = null;
     this._replayRecorder = null;
     this._config = {
-      endpoint: "https://loghive-server.vercel.app/api/v1",
+      endpoint: "https://apperioserver.onrender.com/api/v1",
       minLogLevel: "info" /* INFO */,
       batchSize: 10,
       flushIntervalMs: 5e3,

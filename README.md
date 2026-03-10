@@ -160,7 +160,7 @@ const logger = new Apperio({
   projectId: 'your-project-id',
 
   // --- Connection ---
-  endpoint: 'https://loghive-server.vercel.app/api/v1', // Default. Change for self-hosted.
+  endpoint: 'https://apperioserver.onrender.com/api/v1', // Default. Change for self-hosted.
 
   // --- Logging Behavior ---
   minLogLevel: LogLevel.INFO,   // Only send logs at this level or above. Default: INFO
@@ -963,7 +963,7 @@ process.on('SIGINT', async () => {
 |--------|------|---------|-------------|
 | `apiKey` | `string` | *required* | Your project API key |
 | `projectId` | `string` | *required* | Your project ID |
-| `endpoint` | `string` | `'https://loghive-server.vercel.app/api/v1'` | API endpoint URL |
+| `endpoint` | `string` | `'https://apperioserver.onrender.com/api/v1'` | API endpoint URL |
 | `minLogLevel` | `LogLevel` | `LogLevel.INFO` | Minimum level to send |
 | `batchSize` | `number` | `10` | Logs per batch |
 | `flushIntervalMs` | `number` | `5000` | Auto-flush interval (ms) |
