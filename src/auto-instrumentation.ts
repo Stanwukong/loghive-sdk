@@ -17,6 +17,7 @@ import { BreadcrumbManager } from "./breadcrumb-manager";
 export class AutoInstrumentation {
   private logger: Apperio;
   private originalFetch?: typeof fetch;
+  private originalFetchUnbound?: typeof fetch;
   private originalXHROpen?: typeof XMLHttpRequest.prototype.open;
   private originalXHRSend?: typeof XMLHttpRequest.prototype.send;
   private originalConsoleError?: typeof console.error;
@@ -296,6 +297,7 @@ export class AutoInstrumentation {
   private setupNetworkCapture(): void {
     // Patch fetch
     if (window.fetch) {
+      this.originalFetchUnbound = window.fetch;
       this.originalFetch = window.fetch.bind(window);
       window.fetch = async (...args) => {
         const startTime = performance.now();
@@ -650,8 +652,8 @@ export class AutoInstrumentation {
 
   public destroy(): void {
     // Restore original functions
-    if (this.originalFetch) {
-      window.fetch = this.originalFetch;
+    if (this.originalFetchUnbound) {
+      window.fetch = this.originalFetchUnbound;
     }
 
     if (this.originalXHROpen) {

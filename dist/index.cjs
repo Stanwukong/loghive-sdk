@@ -418,6 +418,7 @@ var AutoInstrumentation = class {
   }
   setupNetworkCapture() {
     if (window.fetch) {
+      this.originalFetchUnbound = window.fetch;
       this.originalFetch = window.fetch.bind(window);
       window.fetch = async (...args) => {
         const startTime = performance.now();
@@ -713,8 +714,8 @@ var AutoInstrumentation = class {
     return "poor";
   }
   destroy() {
-    if (this.originalFetch) {
-      window.fetch = this.originalFetch;
+    if (this.originalFetchUnbound) {
+      window.fetch = this.originalFetchUnbound;
     }
     if (this.originalXHROpen) {
       XMLHttpRequest.prototype.open = this.originalXHROpen;

@@ -571,6 +571,7 @@ declare class Apperio {
 declare class AutoInstrumentation {
     private logger;
     private originalFetch?;
+    private originalFetchUnbound?;
     private originalXHROpen?;
     private originalXHRSend?;
     private originalConsoleError?;
