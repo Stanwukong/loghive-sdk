@@ -296,7 +296,7 @@ export class AutoInstrumentation {
   private setupNetworkCapture(): void {
     // Patch fetch
     if (window.fetch) {
-      this.originalFetch = window.fetch;
+      this.originalFetch = window.fetch.bind(window);
       window.fetch = async (...args) => {
         const startTime = performance.now();
 

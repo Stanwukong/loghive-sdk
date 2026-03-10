@@ -412,7 +412,7 @@ var AutoInstrumentation = class {
   }
   setupNetworkCapture() {
     if (window.fetch) {
-      this.originalFetch = window.fetch;
+      this.originalFetch = window.fetch.bind(window);
       window.fetch = async (...args) => {
         const startTime = performance.now();
         let url;
