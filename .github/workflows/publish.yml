@@ -49,6 +49,9 @@ jobs:
           name: dist
           path: dist/
 
+      - name: Remove repo .npmrc (conflicts with setup-node auth)
+        run: rm -f .npmrc
+
       - run: npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
