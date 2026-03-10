@@ -73,6 +73,12 @@ export {
   type DetectedPattern
 } from './pattern-detector';
 
+// Session Replay
+export {
+  ReplayRecorder,
+  type ReplayConfig
+} from './replay-recorder';
+
 // Convenience function for quick setup
 export const createLogger = (config: LoggerConfig) => {
   return new Apperio(config);

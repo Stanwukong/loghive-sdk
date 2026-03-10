@@ -1,3 +1,5 @@
+import { eventWithTime } from '@rrweb/types';
+
 /**
  * Offline Manager
  *
@@ -201,6 +203,24 @@ interface LoggerConfig {
         enabled?: boolean;
         /** Automatically create spans for network requests. @default false */
         autoTraceNetworkRequests?: boolean;
+    };
+    /** Session Replay recording configuration (rrweb-based). */
+    replay?: {
+        enabled: boolean;
+        maskAllText?: boolean;
+        maskAllInputs?: boolean;
+        blockSelector?: string;
+        ignoreSelector?: string;
+        maxDurationMs?: number;
+        batchSize?: number;
+        flushIntervalMs?: number;
+        sampling?: {
+            mousemove?: boolean | number;
+            mouseInteraction?: boolean;
+            scroll?: number;
+            media?: number;
+            input?: 'last' | 'all';
+        };
     };
     /** Enable client-side error pattern detection. @default true */
     enablePatternDetection?: boolean;
@@ -512,6 +532,7 @@ declare class Apperio {
     private _remoteConfigManager;
     private _traceContextManager;
     private _patternDetector;
+    private _replayRecorder;
     constructor(config: LoggerConfig);
     isInitialized(): boolean;
     init(): void;
@@ -543,6 +564,7 @@ declare class Apperio {
     getCurrentTrace(): TraceContext | null;
     createChildSpan(name: string): Span | null;
     private _applyRemoteConfig;
+    private _sendReplayEvents;
     shutdown(): Promise<void>;
 }
 
@@ -945,6 +967,38 @@ declare class PatternDetector {
     reset(): void;
 }
 
+interface ReplayConfig {
+    enabled: boolean;
+    maskAllText?: boolean;
+    maskAllInputs?: boolean;
+    blockSelector?: string;
+    ignoreSelector?: string;
+    maxDurationMs?: number;
+    batchSize?: number;
+    flushIntervalMs?: number;
+    sampling?: {
+        mousemove?: boolean | number;
+        mouseInteraction?: boolean;
+        scroll?: number;
+        media?: number;
+        input?: 'last' | 'all';
+    };
+}
+declare class ReplayRecorder {
+    private _buffer;
+    private _stopFn;
+    private _flushTimer;
+    private _maxTimer;
+    private _config;
+    private _onFlush;
+    private _recording;
+    constructor(config: ReplayConfig, onFlush: (events: eventWithTime[]) => void);
+    start(): Promise<void>;
+    flush(): void;
+    stop(): void;
+    get isRecording(): boolean;
+}
+
 declare const createLogger: (config: LoggerConfig) => Apperio;
 
-export { Apperio, type AuditEntry, AutoInstrumentation, type Breadcrumb, BreadcrumbManager, CircuitBreaker, type CircuitBreakerConfig, CircuitBreakerState, type CompressionResult, DataSanitizer, type DetectedPattern, type EnvironmentSnapshot, type HealthMetrics, HealthMetricsCollector, type LogEntry, LogLevel, type LoggerConfig, type NetworkRequest, OfflineManager, type OfflineManagerConfig, PII_PATTERNS, PatternDetector, type PerformanceEntry, RemoteConfigManager, type RemoteConfigOptions, type RemoteSDKConfig, type RetentionPolicy, SANITIZATION_PRESETS, type SanitizationConfig, type SanitizationRule, Span, type SpanData, type TraceContext, TraceContextManager, TracePropagator, type UserInteraction, compressPayload, createDataSanitizer, createLogger, preparePayloadForTransmission, uint8ArrayToBase64 };
+export { Apperio, type AuditEntry, AutoInstrumentation, type Breadcrumb, BreadcrumbManager, CircuitBreaker, type CircuitBreakerConfig, CircuitBreakerState, type CompressionResult, DataSanitizer, type DetectedPattern, type EnvironmentSnapshot, type HealthMetrics, HealthMetricsCollector, type LogEntry, LogLevel, type LoggerConfig, type NetworkRequest, OfflineManager, type OfflineManagerConfig, PII_PATTERNS, PatternDetector, type PerformanceEntry, RemoteConfigManager, type RemoteConfigOptions, type RemoteSDKConfig, type ReplayConfig, ReplayRecorder, type RetentionPolicy, SANITIZATION_PRESETS, type SanitizationConfig, type SanitizationRule, Span, type SpanData, type TraceContext, TraceContextManager, TracePropagator, type UserInteraction, compressPayload, createDataSanitizer, createLogger, preparePayloadForTransmission, uint8ArrayToBase64 };

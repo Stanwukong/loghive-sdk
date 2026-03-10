@@ -9,6 +9,7 @@ import { RemoteConfigManager, RemoteSDKConfig } from './remote-config';
 import { TraceContextManager, TraceContext } from './tracing/trace-context';
 import { Span } from './tracing/span';
 import { PatternDetector } from './pattern-detector';
+import { ReplayRecorder } from './replay-recorder';
 
 export class Apperio {
   private static readonly MAX_BUFFER_SIZE = 1000;
@@ -28,6 +29,7 @@ export class Apperio {
   private _remoteConfigManager: RemoteConfigManager | null = null;
   private _traceContextManager: TraceContextManager | null = null;
   private _patternDetector: PatternDetector | null = null;
+  private _replayRecorder: ReplayRecorder | null = null;
 
   constructor(config: LoggerConfig) {
     // Apply default values to the configuration
@@ -66,6 +68,7 @@ export class Apperio {
         autoTraceNetworkRequests: false,
         ...(config.tracing || {}),
       },
+      replay: config.replay || undefined,
       enablePatternDetection: config.enablePatternDetection !== false,
       onPatternDetected: config.onPatternDetected || undefined,
     } as Required<LoggerConfig>;
@@ -186,6 +189,14 @@ export class Apperio {
     // --- Phase 3: Pattern Detection ---
     if (this._config.enablePatternDetection) {
       this._patternDetector = new PatternDetector();
+    }
+
+    // --- Session Replay ---
+    if (this._config.replay?.enabled && typeof window !== 'undefined') {
+      this._replayRecorder = new ReplayRecorder(this._config.replay, (events) => {
+        this._sendReplayEvents(events);
+      });
+      this._replayRecorder.start();
     }
 
     // --- Phase 2: Remote Configuration ---
@@ -546,8 +557,30 @@ export class Apperio {
     }
   }
 
+  private async _sendReplayEvents(events: any[]): Promise<void> {
+    if (!this._config.apiKey || !this._config.projectId) return;
+    const sessionId = (this._context as Record<string, any>).sessionId || 'unknown';
+    try {
+      await this._axiosInstance.post(
+        `${this._config.endpoint}/${this._config.projectId}/replay`,
+        { sessionId, events },
+        {
+          timeout: 10_000,
+        }
+      );
+    } catch {
+      // Silently fail -- replay data is best-effort
+    }
+  }
+
   public async shutdown(): Promise<void> {
     this._isShuttingDown = true;
+
+    // Stop replay recorder
+    if (this._replayRecorder) {
+      this._replayRecorder.stop();
+      this._replayRecorder = null;
+    }
 
     if (this._flushTimer) {
       clearInterval(this._flushTimer);

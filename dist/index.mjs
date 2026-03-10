@@ -1675,6 +1675,87 @@ var PatternDetector = class {
   }
 };
 
+// src/replay-recorder.ts
+var DEFAULTS = {
+  maskAllText: true,
+  maskAllInputs: true,
+  maxDurationMs: 10 * 60 * 1e3,
+  // 10 minutes
+  batchSize: 50,
+  flushIntervalMs: 1e4
+  // 10 seconds
+};
+var ReplayRecorder = class {
+  constructor(config, onFlush) {
+    this._buffer = [];
+    this._stopFn = null;
+    this._flushTimer = null;
+    this._maxTimer = null;
+    this._recording = false;
+    this._config = { ...DEFAULTS, ...config };
+    this._onFlush = onFlush;
+  }
+  async start() {
+    if (this._recording) return;
+    if (typeof window === "undefined") return;
+    const rrweb = await import('rrweb');
+    const recordFn = rrweb.record;
+    const opts = {
+      emit: (event) => {
+        this._buffer.push(event);
+        if (this._buffer.length >= this._config.batchSize) {
+          this.flush();
+        }
+      },
+      maskAllInputs: this._config.maskAllInputs,
+      blockSelector: this._config.blockSelector ?? void 0
+    };
+    if (this._config.maskAllText) {
+      opts.maskTextSelector = "*";
+    }
+    if (this._config.ignoreSelector) {
+      opts.ignoreClass = this._config.ignoreSelector;
+    }
+    if (this._config.sampling) {
+      opts.sampling = {
+        mousemove: this._config.sampling.mousemove,
+        scroll: this._config.sampling.scroll,
+        media: this._config.sampling.media,
+        input: this._config.sampling.input
+      };
+    }
+    this._stopFn = recordFn(opts) || null;
+    this._recording = true;
+    this._flushTimer = setInterval(() => this.flush(), this._config.flushIntervalMs);
+    this._maxTimer = setTimeout(() => this.stop(), this._config.maxDurationMs);
+  }
+  flush() {
+    if (this._buffer.length === 0) return;
+    const events = this._buffer.splice(0);
+    this._onFlush(events);
+  }
+  stop() {
+    if (!this._recording) return;
+    this._recording = false;
+    if (this._stopFn) {
+      this._stopFn();
+      this._stopFn = null;
+    }
+    if (this._flushTimer) {
+      clearInterval(this._flushTimer);
+      this._flushTimer = null;
+    }
+    if (this._maxTimer) {
+      clearTimeout(this._maxTimer);
+      this._maxTimer = null;
+    }
+    this.flush();
+  }
+  get isRecording() {
+    return this._recording;
+  }
+};
+
 // src/logger.ts
 var _Apperio = class _Apperio {
   constructor(config) {
@@ -1689,6 +1770,7 @@ var _Apperio = class _Apperio {
     this._remoteConfigManager = null;
     this._traceContextManager = null;
     this._patternDetector = null;
+    this._replayRecorder = null;
     this._config = {
       endpoint: "https://loghive-server.vercel.app/api/v1",
       minLogLevel: "info" /* INFO */,
@@ -1724,6 +1806,7 @@ var _Apperio = class _Apperio {
         autoTraceNetworkRequests: false,
         ...config.tracing || {}
       },
+      replay: config.replay || void 0,
       enablePatternDetection: config.enablePatternDetection !== false,
       onPatternDetected: config.onPatternDetected || void 0
     };
@@ -1809,6 +1892,12 @@ var _Apperio = class _Apperio {
     }
     if (this._config.enablePatternDetection) {
       this._patternDetector = new PatternDetector();
+    }
+    if (this._config.replay?.enabled && typeof window !== "undefined") {
+      this._replayRecorder = new ReplayRecorder(this._config.replay, (events) => {
+        this._sendReplayEvents(events);
+      });
+      this._replayRecorder.start();
     }
     if (this._config.remoteConfig?.enabled) {
       this._remoteConfigManager = new RemoteConfigManager(
@@ -2094,8 +2183,26 @@ var _Apperio = class _Apperio {
       this._config.autoCapture = { ...this._config.autoCapture, ...config.autoCapture };
     }
   }
+  async _sendReplayEvents(events) {
+    if (!this._config.apiKey || !this._config.projectId) return;
+    const sessionId = this._context.sessionId || "unknown";
+    try {
+      await this._axiosInstance.post(
+        `${this._config.endpoint}/${this._config.projectId}/replay`,
+        { sessionId, events },
+        {
+          timeout: 1e4
+        }
+      );
+    } catch {
+    }
+  }
   async shutdown() {
     this._isShuttingDown = true;
+    if (this._replayRecorder) {
+      this._replayRecorder.stop();
+      this._replayRecorder = null;
+    }
     if (this._flushTimer) {
       clearInterval(this._flushTimer);
       this._flushTimer = null;
@@ -2729,6 +2836,6 @@ var createLogger = (config) => {
   return new Apperio(config);
 };
 
-export { Apperio, AutoInstrumentation, BreadcrumbManager, CircuitBreaker, CircuitBreakerState, DataSanitizer, HealthMetricsCollector, LogLevel, OfflineManager, PII_PATTERNS, PatternDetector, RemoteConfigManager, SANITIZATION_PRESETS, Span, TraceContextManager, TracePropagator, compressPayload, createDataSanitizer, createLogger, preparePayloadForTransmission, uint8ArrayToBase64 };
+export { Apperio, AutoInstrumentation, BreadcrumbManager, CircuitBreaker, CircuitBreakerState, DataSanitizer, HealthMetricsCollector, LogLevel, OfflineManager, PII_PATTERNS, PatternDetector, RemoteConfigManager, ReplayRecorder, SANITIZATION_PRESETS, Span, TraceContextManager, TracePropagator, compressPayload, createDataSanitizer, createLogger, preparePayloadForTransmission, uint8ArrayToBase64 };
 //# sourceMappingURL=index.mjs.map
 //# sourceMappingURL=index.mjs.map
