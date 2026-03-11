@@ -30,6 +30,8 @@ export class Apperio {
   private _traceContextManager: TraceContextManager | null = null;
   private _patternDetector: PatternDetector | null = null;
   private _replayRecorder: ReplayRecorder | null = null;
+  private _lastTimestamp: string = '';
+  private _timestampCounter: number = 0;
 
   constructor(config: LoggerConfig) {
     // Apply default values to the configuration
@@ -226,6 +228,10 @@ export class Apperio {
     this._context = {};
   }
 
+  public getEndpoint(): string {
+    return this._config.endpoint;
+  }
+
   public _log(level: LogLevel, message: string, error?: Error, data?: Record<string, any>): void {
     if (this._isShuttingDown) {
       console.warn(`Apperio: Attempted to log "${message}" during shutdown. Log ignored.`);
@@ -236,9 +242,20 @@ export class Apperio {
       return;
     }
 
+    // Monotonic timestamp: ensure at least 1ms difference between logs
+    let timestamp = new Date().toISOString();
+    if (timestamp === this._lastTimestamp) {
+      this._timestampCounter++;
+      const adjusted = new Date(new Date(timestamp).getTime() + this._timestampCounter);
+      timestamp = adjusted.toISOString();
+    } else {
+      this._lastTimestamp = timestamp;
+      this._timestampCounter = 0;
+    }
+
     const logEntry: LogEntry = {
       projectId: this._config.projectId,
-      timestamp: new Date().toISOString(),
+      timestamp,
       level: level,
       message: message,
       data: data,
@@ -284,6 +301,14 @@ export class Apperio {
       this._offlineManager.enqueue(sanitizedEntry);
       return;
     }
+
+    // Same-batch deduplication: skip if buffer already has identical message + timestamp
+    const isDuplicate = this._logBuffer.some(
+      (existing) =>
+        existing.message === sanitizedEntry.message &&
+        existing.timestamp === sanitizedEntry.timestamp
+    );
+    if (isDuplicate) return;
 
     this._logBuffer.push(sanitizedEntry);
 

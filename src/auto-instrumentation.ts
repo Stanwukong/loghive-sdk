@@ -295,6 +295,8 @@ export class AutoInstrumentation {
   }
 
   private setupNetworkCapture(): void {
+    const sdkEndpoint = this.logger.getEndpoint();
+
     // Patch fetch
     if (window.fetch) {
       this.originalFetchUnbound = window.fetch;
@@ -312,6 +314,11 @@ export class AutoInstrumentation {
           url = args[0].url;
         } else {
           url = String(args[0]);
+        }
+
+        // Skip SDK's own requests to avoid feedback loop
+        if (url.startsWith(sdkEndpoint)) {
+          return this.originalFetch!(...args);
         }
 
         // Extract method from Request object or options
@@ -421,6 +428,7 @@ export class AutoInstrumentation {
           method,
           url,
           startTime: performance.now(),
+          isSDKRequest: typeof url === 'string' && url.startsWith(sdkEndpoint),
         };
         return originalXHROpen?.call(
           this,
@@ -434,7 +442,7 @@ export class AutoInstrumentation {
 
       XHR.send = function (body?: Document | XMLHttpRequestBodyInit | null) {
         const data = (this as any)._loggerData;
-        if (data) {
+        if (data && !data.isSDKRequest) {
           this.addEventListener("loadend", () => {
             const duration = performance.now() - data.startTime;
 

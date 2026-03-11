@@ -533,12 +533,15 @@ declare class Apperio {
     private _traceContextManager;
     private _patternDetector;
     private _replayRecorder;
+    private _lastTimestamp;
+    private _timestampCounter;
     constructor(config: LoggerConfig);
     isInitialized(): boolean;
     init(): void;
     setContext(context: Record<string, any>): void;
     getContext(): Record<string, any>;
     clearContext(): void;
+    getEndpoint(): string;
     _log(level: LogLevel, message: string, error?: Error, data?: Record<string, any>): void;
     trace(message: string, data?: Record<string, any>): void;
     debug(message: string, data?: Record<string, any>): void;

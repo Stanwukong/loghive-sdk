@@ -411,6 +411,7 @@ var AutoInstrumentation = class {
     );
   }
   setupNetworkCapture() {
+    const sdkEndpoint = this.logger.getEndpoint();
     if (window.fetch) {
       this.originalFetchUnbound = window.fetch;
       this.originalFetch = window.fetch.bind(window);
@@ -425,6 +426,9 @@ var AutoInstrumentation = class {
           url = args[0].url;
         } else {
           url = String(args[0]);
+        }
+        if (url.startsWith(sdkEndpoint)) {
+          return this.originalFetch(...args);
         }
         let method;
         if (args[0] instanceof Request) {
@@ -508,7 +512,8 @@ var AutoInstrumentation = class {
         this._loggerData = {
           method,
           url,
-          startTime: performance.now()
+          startTime: performance.now(),
+          isSDKRequest: typeof url === "string" && url.startsWith(sdkEndpoint)
         };
         return originalXHROpen?.call(
           this,
@@ -521,7 +526,7 @@ var AutoInstrumentation = class {
       };
       XHR.send = function(body) {
         const data = this._loggerData;
-        if (data) {
+        if (data && !data.isSDKRequest) {
           this.addEventListener("loadend", () => {
             const duration = performance.now() - data.startTime;
             const networkRequest = {
@@ -1772,6 +1777,8 @@ var _Apperio = class _Apperio {
     this._traceContextManager = null;
     this._patternDetector = null;
     this._replayRecorder = null;
+    this._lastTimestamp = "";
+    this._timestampCounter = 0;
     this._config = {
       endpoint: "https://apperioserver.onrender.com/api/v1",
       minLogLevel: "info" /* INFO */,
@@ -1922,6 +1929,9 @@ var _Apperio = class _Apperio {
   clearContext() {
     this._context = {};
   }
+  getEndpoint() {
+    return this._config.endpoint;
+  }
   _log(level, message, error, data) {
     if (this._isShuttingDown) {
       console.warn(`Apperio: Attempted to log "${message}" during shutdown. Log ignored.`);
@@ -1930,9 +1940,18 @@ var _Apperio = class _Apperio {
     if (!shouldLog(level, this._config.minLogLevel)) {
       return;
     }
+    let timestamp = (/* @__PURE__ */ new Date()).toISOString();
+    if (timestamp === this._lastTimestamp) {
+      this._timestampCounter++;
+      const adjusted = new Date(new Date(timestamp).getTime() + this._timestampCounter);
+      timestamp = adjusted.toISOString();
+    } else {
+      this._lastTimestamp = timestamp;
+      this._timestampCounter = 0;
+    }
     const logEntry = {
       projectId: this._config.projectId,
-      timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+      timestamp,
       level,
       message,
       data,
@@ -1964,6 +1983,10 @@ var _Apperio = class _Apperio {
       this._offlineManager.enqueue(sanitizedEntry);
       return;
     }
+    const isDuplicate = this._logBuffer.some(
+      (existing) => existing.message === sanitizedEntry.message && existing.timestamp === sanitizedEntry.timestamp
+    );
+    if (isDuplicate) return;
     this._logBuffer.push(sanitizedEntry);
     if (this._patternDetector && (level === "error" /* ERROR */ || level === "fatal" /* FATAL */)) {
       const errorMsg = error?.message || message;
