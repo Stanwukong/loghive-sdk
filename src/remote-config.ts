@@ -177,6 +177,6 @@ export class RemoteConfigManager {
     if (this.options.endpoint) {
       return this.options.endpoint;
     }
-    return `${this.baseEndpoint}/sdk-config/${this.projectId}`;
+    return `${this.baseEndpoint}/sdk-config`;
   }
 }

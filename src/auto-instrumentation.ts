@@ -22,6 +22,9 @@ export class AutoInstrumentation {
   private originalXHRSend?: typeof XMLHttpRequest.prototype.send;
   private originalConsoleError?: typeof console.error;
   private originalConsoleWarn?: typeof console.warn;
+  private originalConsoleLog?: typeof console.log;
+  private originalConsoleInfo?: typeof console.info;
+  private originalConsoleDebug?: typeof console.debug;
   private performanceObserver?: PerformanceObserver;
   private breadcrumbManager: BreadcrumbManager;
   private webVitalObservers: PerformanceObserver[] = [];
@@ -493,6 +496,9 @@ export class AutoInstrumentation {
   private setupConsoleCapture(): void {
     this.originalConsoleError = console.error;
     this.originalConsoleWarn = console.warn;
+    this.originalConsoleLog = console.log;
+    this.originalConsoleInfo = console.info;
+    this.originalConsoleDebug = console.debug;
 
     console.error = (...args: any[]) => {
       this.breadcrumbManager.add({
@@ -505,6 +511,7 @@ export class AutoInstrumentation {
 
       this.logger._log(LogLevel.ERROR, "Console Error", undefined, {
         eventType: "console",
+        consoleMethod: "error",
         consoleArgs: args.map((arg) => String(arg)),
         url: window.location.href,
         timestamp: Date.now(),
@@ -524,12 +531,73 @@ export class AutoInstrumentation {
 
       this.logger._log(LogLevel.WARN, "Console Warning", undefined, {
         eventType: "console",
+        consoleMethod: "warn",
         consoleArgs: args.map((arg) => String(arg)),
         url: window.location.href,
         timestamp: Date.now(),
       });
 
       return this.originalConsoleWarn?.apply(console, args);
+    };
+
+    console.log = (...args: any[]) => {
+      this.breadcrumbManager.add({
+        timestamp: Date.now(),
+        category: 'console',
+        message: 'Console Log',
+        level: 'info',
+        data: { args: args.map((arg) => String(arg)) },
+      });
+
+      this.logger._log(LogLevel.INFO, "Console Log", undefined, {
+        eventType: "console",
+        consoleMethod: "log",
+        consoleArgs: args.map((arg) => String(arg)),
+        url: window.location.href,
+        timestamp: Date.now(),
+      });
+
+      return this.originalConsoleLog?.apply(console, args);
+    };
+
+    console.info = (...args: any[]) => {
+      this.breadcrumbManager.add({
+        timestamp: Date.now(),
+        category: 'console',
+        message: 'Console Info',
+        level: 'info',
+        data: { args: args.map((arg) => String(arg)) },
+      });
+
+      this.logger._log(LogLevel.INFO, "Console Info", undefined, {
+        eventType: "console",
+        consoleMethod: "info",
+        consoleArgs: args.map((arg) => String(arg)),
+        url: window.location.href,
+        timestamp: Date.now(),
+      });
+
+      return this.originalConsoleInfo?.apply(console, args);
+    };
+
+    console.debug = (...args: any[]) => {
+      this.breadcrumbManager.add({
+        timestamp: Date.now(),
+        category: 'console',
+        message: 'Console Debug',
+        level: 'debug',
+        data: { args: args.map((arg) => String(arg)) },
+      });
+
+      this.logger._log(LogLevel.DEBUG, "Console Debug", undefined, {
+        eventType: "console",
+        consoleMethod: "debug",
+        consoleArgs: args.map((arg) => String(arg)),
+        url: window.location.href,
+        timestamp: Date.now(),
+      });
+
+      return this.originalConsoleDebug?.apply(console, args);
     };
   }
 
@@ -678,6 +746,18 @@ export class AutoInstrumentation {
 
     if (this.originalConsoleWarn) {
       console.warn = this.originalConsoleWarn;
+    }
+
+    if (this.originalConsoleLog) {
+      console.log = this.originalConsoleLog;
+    }
+
+    if (this.originalConsoleInfo) {
+      console.info = this.originalConsoleInfo;
+    }
+
+    if (this.originalConsoleDebug) {
+      console.debug = this.originalConsoleDebug;
     }
 
     if (this.performanceObserver) {

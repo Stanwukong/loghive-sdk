@@ -3,7 +3,7 @@ import axios, { AxiosInstance, AxiosError } from 'axios';
 import { LoggerConfig, LogEntry, LogLevel } from './types';
 import { delay, getExponentialBackoffDelay, shouldLog, extractErrorDetails, isInBrowser } from './utils';
 import { AutoInstrumentation } from './auto-instrumentation';
-import { DataSanitizer, SanitizationConfig, createDataSanitizer } from './data-sanitizer';
+import { DataSanitizer, SanitizationConfig, createDataSanitizer, SANITIZATION_PRESETS } from './data-sanitizer';
 import { OfflineManager } from './offline-manager';
 import { RemoteConfigManager, RemoteSDKConfig } from './remote-config';
 import { TraceContextManager, TraceContext } from './tracing/trace-context';
@@ -579,6 +579,12 @@ export class Apperio {
     }
     if (config.autoCapture) {
       this._config.autoCapture = { ...this._config.autoCapture, ...config.autoCapture };
+    }
+    if (config.sanitization?.preset) {
+      const preset = SANITIZATION_PRESETS[config.sanitization.preset];
+      if (preset) {
+        this._dataSanitizer.updateConfig(preset);
+      }
     }
   }
 
