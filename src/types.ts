@@ -65,24 +65,6 @@ export interface LoggerConfig {
     /** Automatically create spans for network requests. @default false */
     autoTraceNetworkRequests?: boolean;
   };
-  /** Session Replay recording configuration (rrweb-based). */
-  replay?: {
-    enabled: boolean;
-    maskAllText?: boolean;
-    maskAllInputs?: boolean;
-    blockSelector?: string;
-    ignoreSelector?: string;
-    maxDurationMs?: number;
-    batchSize?: number;
-    flushIntervalMs?: number;
-    sampling?: {
-      mousemove?: boolean | number;
-      mouseInteraction?: boolean;
-      scroll?: number;
-      media?: number;
-      input?: 'last' | 'all';
-    };
-  };
   /** Enable client-side error pattern detection. @default true */
   enablePatternDetection?: boolean;
   /** Callback invoked when a pattern is detected (recurring error or error spike). */

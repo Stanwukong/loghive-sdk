@@ -239,8 +239,8 @@ A common pattern is to change settings based on whether you're in development or
 const isProd = process.env.NODE_ENV === 'production';
 
 const logger = new Apperio({
-  apiKey: process.env.MONITA_API_KEY!,
-  projectId: process.env.MONITA_PROJECT_ID!,
+  apiKey: process.env.APPERIO_API_KEY!,
+  projectId: process.env.APPERIO_PROJECT_ID!,
   environment: process.env.NODE_ENV,
 
   // In production: only send warnings and above. In dev: send everything.
@@ -446,8 +446,11 @@ autoCapture: { consoleMessages: true }
 What it captures:
 - `console.error(...)` — Logged at ERROR level
 - `console.warn(...)` — Logged at WARN level
+- `console.log(...)` — Logged at INFO level
+- `console.info(...)` — Logged at INFO level
+- `console.debug(...)` — Logged at DEBUG level
 
-The original `console.error` and `console.warn` still work normally — the SDK wraps them non-destructively.
+The original console methods still work normally — the SDK wraps them non-destructively.
 
 ### Page View Tracking
 
@@ -671,8 +674,9 @@ The server can adjust:
 - `minLogLevel` — Change verbosity remotely
 - `batchSize` and `flushIntervalMs` — Tune batching behavior
 - `autoCapture` — Enable/disable specific capture types
+- `sanitization.preset` — Switch between STRICT, BALANCED, or LENIENT presets
 
-The SDK fetches config immediately on init, then polls at the configured interval.
+Configure remote settings from the Apperio dashboard under **Project Settings > SDK Config**. The SDK fetches config immediately on init, then polls at the configured interval.
 
 ---
 
@@ -685,8 +689,8 @@ The SDK fetches config immediately on init, then polls at the configured interva
 import { Apperio, LogLevel } from 'apperio';
 
 export const logger = new Apperio({
-  apiKey: process.env.REACT_APP_MONITA_API_KEY!,
-  projectId: process.env.REACT_APP_MONITA_PROJECT_ID!,
+  apiKey: process.env.REACT_APP_APPERIO_API_KEY!,
+  projectId: process.env.REACT_APP_APPERIO_PROJECT_ID!,
   environment: process.env.NODE_ENV,
   serviceName: 'react-frontend',
   autoCapture: {
@@ -740,8 +744,8 @@ function App() {
 import { Apperio } from 'apperio';
 
 export const logger = new Apperio({
-  apiKey: process.env.NEXT_PUBLIC_MONITA_API_KEY!,
-  projectId: process.env.NEXT_PUBLIC_MONITA_PROJECT_ID!,
+  apiKey: process.env.NEXT_PUBLIC_APPERIO_API_KEY!,
+  projectId: process.env.NEXT_PUBLIC_APPERIO_PROJECT_ID!,
   environment: process.env.NODE_ENV,
   serviceName: 'nextjs-app',
   autoCapture: {
@@ -803,8 +807,8 @@ export async function GET(request: Request) {
 import { Apperio } from 'apperio';
 
 export const logger = new Apperio({
-  apiKey: import.meta.env.VITE_MONITA_API_KEY,
-  projectId: import.meta.env.VITE_MONITA_PROJECT_ID,
+  apiKey: import.meta.env.VITE_APPERIO_API_KEY,
+  projectId: import.meta.env.VITE_APPERIO_PROJECT_ID,
   environment: import.meta.env.MODE,
   serviceName: 'vue-frontend',
   autoCapture: {
@@ -844,8 +848,8 @@ import { Apperio } from 'apperio';
 const app = express();
 
 const logger = new Apperio({
-  apiKey: process.env.MONITA_API_KEY!,
-  projectId: process.env.MONITA_PROJECT_ID!,
+  apiKey: process.env.APPERIO_API_KEY!,
+  projectId: process.env.APPERIO_PROJECT_ID!,
   environment: process.env.NODE_ENV,
   serviceName: 'express-api',
   autoCapture: {
@@ -897,8 +901,8 @@ process.on('SIGTERM', async () => {
 import { Apperio } from 'apperio';
 
 const logger = new Apperio({
-  apiKey: process.env.MONITA_API_KEY!,
-  projectId: process.env.MONITA_PROJECT_ID!,
+  apiKey: process.env.APPERIO_API_KEY!,
+  projectId: process.env.APPERIO_PROJECT_ID!,
   environment: process.env.NODE_ENV || 'development',
   serviceName: 'my-worker',
   serviceVersion: '1.0.0',
@@ -1142,7 +1146,7 @@ When a log fails to send:
 The SDK hooks into browser APIs by replacing (monkey-patching) global functions:
 - `window.fetch` is wrapped to measure timing and capture status codes
 - `XMLHttpRequest.prototype.open/send` is wrapped similarly
-- `console.error` and `console.warn` are wrapped (when enabled)
+- `console.error`, `console.warn`, `console.log`, `console.info`, and `console.debug` are wrapped (when enabled)
 - `history.pushState` and `history.replaceState` are wrapped for SPA page view tracking
 - `PerformanceObserver` is used to capture resource timing and Web Vitals
 

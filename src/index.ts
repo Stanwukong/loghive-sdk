@@ -38,27 +38,27 @@ export {
   type HealthMetrics
 } from './health-metrics';
 
-// Phase 2: Offline Support
+// Offline Support
 export {
   OfflineManager,
   type OfflineManagerConfig
 } from './offline-manager';
 
-// Phase 2: Remote Configuration
+// Remote Configuration
 export {
   RemoteConfigManager,
   type RemoteConfigOptions,
   type RemoteSDKConfig
 } from './remote-config';
 
-// Phase 2: Enhanced Error Context
+// Enhanced Error Context
 export {
   BreadcrumbManager,
   type Breadcrumb,
   type EnvironmentSnapshot
 } from './breadcrumb-manager';
 
-// Phase 2: Distributed Tracing
+// Distributed Tracing
 export {
   TraceContextManager,
   type TraceContext,
@@ -67,17 +67,11 @@ export {
   TracePropagator
 } from './tracing';
 
-// Phase 3: Pattern Detection
+// Pattern Detection
 export {
   PatternDetector,
   type DetectedPattern
 } from './pattern-detector';
-
-// Session Replay
-export {
-  ReplayRecorder,
-  type ReplayConfig
-} from './replay-recorder';
 
 // Convenience function for quick setup
 export const createLogger = (config: LoggerConfig) => {
