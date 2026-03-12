@@ -1,5 +1,3 @@
-import axios from 'axios';
-
 var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
   get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
 }) : x)(function(x) {
@@ -235,7 +233,7 @@ var AutoInstrumentation = class {
     }
   }
   setupErrorCapture() {
-    window.addEventListener("error", (event) => {
+    this._errorHandler = (event) => {
       const errorDetails = extractErrorDetails(event);
       this.logger._log("error" /* ERROR */, "Uncaught Error", void 0, {
         eventType: "error",
@@ -246,28 +244,27 @@ var AutoInstrumentation = class {
         breadcrumbs: this.breadcrumbManager.getAll(),
         environment: this.breadcrumbManager.captureEnvironment()
       });
-    });
-    window.addEventListener(
-      "unhandledrejection",
-      (event) => {
-        const error = event.reason instanceof Error ? event.reason : new Error(String(event.reason));
-        const errorDetails = extractErrorDetails(error);
-        this.logger._log(
-          "error" /* ERROR */,
-          "Unhandled Promise Rejection",
-          void 0,
-          {
-            eventType: "error",
-            error: errorDetails,
-            url: window.location.href,
-            userAgent: navigator.userAgent,
-            timestamp: Date.now(),
-            breadcrumbs: this.breadcrumbManager.getAll(),
-            environment: this.breadcrumbManager.captureEnvironment()
-          }
-        );
-      }
-    );
+    };
+    window.addEventListener("error", this._errorHandler);
+    this._rejectionHandler = (event) => {
+      const error = event.reason instanceof Error ? event.reason : new Error(String(event.reason));
+      const errorDetails = extractErrorDetails(error);
+      this.logger._log(
+        "error" /* ERROR */,
+        "Unhandled Promise Rejection",
+        void 0,
+        {
+          eventType: "error",
+          error: errorDetails,
+          url: window.location.href,
+          userAgent: navigator.userAgent,
+          timestamp: Date.now(),
+          breadcrumbs: this.breadcrumbManager.getAll(),
+          environment: this.breadcrumbManager.captureEnvironment()
+        }
+      );
+    };
+    window.addEventListener("unhandledrejection", this._rejectionHandler);
   }
   setupPerformanceCapture() {
     if (!("PerformanceObserver" in window)) {
@@ -357,58 +354,43 @@ var AutoInstrumentation = class {
         timestamp: Date.now()
       });
     };
-    document.addEventListener(
-      "click",
-      (event) => {
-        const target = event.target;
-        if (target) {
-          this.breadcrumbManager.add({
-            timestamp: Date.now(),
-            category: "ui",
-            message: "User click",
-            level: "debug",
-            data: {
-              target: getElementSelector(target),
-              coordinates: { x: event.clientX, y: event.clientY }
-            }
-          });
-        }
-        captureInteraction("click", event);
-      },
-      true
-    );
+    this._clickHandler = (event) => {
+      const target = event.target;
+      if (target) {
+        this.breadcrumbManager.add({
+          timestamp: Date.now(),
+          category: "ui",
+          message: "User click",
+          level: "debug",
+          data: {
+            target: getElementSelector(target),
+            coordinates: { x: event.clientX, y: event.clientY }
+          }
+        });
+      }
+      captureInteraction("click", event);
+    };
+    document.addEventListener("click", this._clickHandler, true);
     let scrollTimeout;
-    document.addEventListener(
-      "scroll",
-      () => {
-        clearTimeout(scrollTimeout);
-        scrollTimeout = window.setTimeout(() => {
-          captureInteraction("scroll", new Event("scroll"));
-        }, 100);
-      },
-      true
-    );
-    document.addEventListener(
-      "focus",
-      (event) => captureInteraction("focus", event),
-      true
-    );
-    document.addEventListener(
-      "blur",
-      (event) => captureInteraction("blur", event),
-      true
-    );
+    this._scrollHandler = () => {
+      clearTimeout(scrollTimeout);
+      scrollTimeout = window.setTimeout(() => {
+        captureInteraction("scroll", new Event("scroll"));
+      }, 100);
+    };
+    document.addEventListener("scroll", this._scrollHandler, true);
+    this._focusHandler = (event) => captureInteraction("focus", event);
+    this._blurHandler = (event) => captureInteraction("blur", event);
+    document.addEventListener("focus", this._focusHandler, true);
+    document.addEventListener("blur", this._blurHandler, true);
     let keypressTimeout;
-    document.addEventListener(
-      "keypress",
-      (event) => {
-        clearTimeout(keypressTimeout);
-        keypressTimeout = window.setTimeout(() => {
-          captureInteraction("keypress", event);
-        }, 100);
-      },
-      true
-    );
+    this._keypressHandler = (event) => {
+      clearTimeout(keypressTimeout);
+      keypressTimeout = window.setTimeout(() => {
+        captureInteraction("keypress", event);
+      }, 100);
+    };
+    document.addEventListener("keypress", this._keypressHandler, true);
   }
   setupNetworkCapture() {
     const sdkEndpoint = this.logger.getEndpoint();
@@ -569,6 +551,9 @@ var AutoInstrumentation = class {
   setupConsoleCapture() {
     this.originalConsoleError = console.error;
     this.originalConsoleWarn = console.warn;
+    this.originalConsoleLog = console.log;
+    this.originalConsoleInfo = console.info;
+    this.originalConsoleDebug = console.debug;
     console.error = (...args) => {
       this.breadcrumbManager.add({
         timestamp: Date.now(),
@@ -579,6 +564,7 @@ var AutoInstrumentation = class {
       });
       this.logger._log("error" /* ERROR */, "Console Error", void 0, {
         eventType: "console",
+        consoleMethod: "error",
         consoleArgs: args.map((arg) => String(arg)),
         url: window.location.href,
         timestamp: Date.now()
@@ -595,28 +581,82 @@ var AutoInstrumentation = class {
       });
       this.logger._log("warn" /* WARN */, "Console Warning", void 0, {
         eventType: "console",
+        consoleMethod: "warn",
         consoleArgs: args.map((arg) => String(arg)),
         url: window.location.href,
         timestamp: Date.now()
       });
       return this.originalConsoleWarn?.apply(console, args);
     };
+    console.log = (...args) => {
+      this.breadcrumbManager.add({
+        timestamp: Date.now(),
+        category: "console",
+        message: "Console Log",
+        level: "info",
+        data: { args: args.map((arg) => String(arg)) }
+      });
+      this.logger._log("info" /* INFO */, "Console Log", void 0, {
+        eventType: "console",
+        consoleMethod: "log",
+        consoleArgs: args.map((arg) => String(arg)),
+        url: window.location.href,
+        timestamp: Date.now()
+      });
+      return this.originalConsoleLog?.apply(console, args);
+    };
+    console.info = (...args) => {
+      this.breadcrumbManager.add({
+        timestamp: Date.now(),
+        category: "console",
+        message: "Console Info",
+        level: "info",
+        data: { args: args.map((arg) => String(arg)) }
+      });
+      this.logger._log("info" /* INFO */, "Console Info", void 0, {
+        eventType: "console",
+        consoleMethod: "info",
+        consoleArgs: args.map((arg) => String(arg)),
+        url: window.location.href,
+        timestamp: Date.now()
+      });
+      return this.originalConsoleInfo?.apply(console, args);
+    };
+    console.debug = (...args) => {
+      this.breadcrumbManager.add({
+        timestamp: Date.now(),
+        category: "console",
+        message: "Console Debug",
+        level: "debug",
+        data: { args: args.map((arg) => String(arg)) }
+      });
+      this.logger._log("debug" /* DEBUG */, "Console Debug", void 0, {
+        eventType: "console",
+        consoleMethod: "debug",
+        consoleArgs: args.map((arg) => String(arg)),
+        url: window.location.href,
+        timestamp: Date.now()
+      });
+      return this.originalConsoleDebug?.apply(console, args);
+    };
   }
   setupPageViewCapture() {
     this.capturePageView();
-    const originalPushState = history.pushState;
-    const originalReplaceState = history.replaceState;
-    history.pushState = (...args) => {
-      originalPushState.apply(history, args);
+    this._originalPushState = history.pushState;
+    this._originalReplaceState = history.replaceState;
+    const self = this;
+    history.pushState = function(...args) {
+      self._originalPushState.apply(history, args);
+      setTimeout(() => self.capturePageView(), 0);
+    };
+    history.replaceState = function(...args) {
+      self._originalReplaceState.apply(history, args);
+      setTimeout(() => self.capturePageView(), 0);
+    };
+    this._popstateHandler = () => {
       setTimeout(() => this.capturePageView(), 0);
     };
-    history.replaceState = (...args) => {
-      originalReplaceState.apply(history, args);
-      setTimeout(() => this.capturePageView(), 0);
-    };
-    window.addEventListener("popstate", () => {
-      setTimeout(() => this.capturePageView(), 0);
-    });
+    window.addEventListener("popstate", this._popstateHandler);
   }
   capturePageView() {
     this.breadcrumbManager.add({
@@ -728,6 +768,15 @@ var AutoInstrumentation = class {
     if (this.originalConsoleWarn) {
       console.warn = this.originalConsoleWarn;
     }
+    if (this.originalConsoleLog) {
+      console.log = this.originalConsoleLog;
+    }
+    if (this.originalConsoleInfo) {
+      console.info = this.originalConsoleInfo;
+    }
+    if (this.originalConsoleDebug) {
+      console.debug = this.originalConsoleDebug;
+    }
     if (this.performanceObserver) {
       this.performanceObserver.disconnect();
     }
@@ -735,6 +784,36 @@ var AutoInstrumentation = class {
       observer.disconnect();
     }
     this.webVitalObservers = [];
+    if (this._errorHandler) {
+      window.removeEventListener("error", this._errorHandler);
+    }
+    if (this._rejectionHandler) {
+      window.removeEventListener("unhandledrejection", this._rejectionHandler);
+    }
+    if (this._clickHandler) {
+      document.removeEventListener("click", this._clickHandler, true);
+    }
+    if (this._scrollHandler) {
+      document.removeEventListener("scroll", this._scrollHandler, true);
+    }
+    if (this._focusHandler) {
+      document.removeEventListener("focus", this._focusHandler, true);
+    }
+    if (this._blurHandler) {
+      document.removeEventListener("blur", this._blurHandler, true);
+    }
+    if (this._keypressHandler) {
+      document.removeEventListener("keypress", this._keypressHandler, true);
+    }
+    if (this._popstateHandler) {
+      window.removeEventListener("popstate", this._popstateHandler);
+    }
+    if (this._originalPushState) {
+      history.pushState = this._originalPushState;
+    }
+    if (this._originalReplaceState) {
+      history.replaceState = this._originalReplaceState;
+    }
   }
 };
 
@@ -796,9 +875,9 @@ var PII_PATTERNS = [
     severity: "critical",
     category: "authentication"
   },
-  // Bank account numbers (basic pattern)
+  // Bank account numbers (requires contextual keyword to avoid false positives on UUIDs/timestamps)
   {
-    pattern: /\b\d{8,17}\b/g,
+    pattern: /(?:account|acct|routing|iban|bank)[#:\s_-]*\d{8,17}\b/gi,
     replacement: "[ACCOUNT_REDACTED]",
     description: "Bank account number redaction",
     severity: "critical",
@@ -1428,7 +1507,7 @@ var RemoteConfigManager = class {
     if (this.options.endpoint) {
       return this.options.endpoint;
     }
-    return `${this.baseEndpoint}/sdk-config/${this.projectId}`;
+    return `${this.baseEndpoint}/sdk-config`;
   }
 };
 
@@ -1681,87 +1760,6 @@ var PatternDetector = class {
   }
 };
 
-// src/replay-recorder.ts
-var DEFAULTS = {
-  maskAllText: true,
-  maskAllInputs: true,
-  maxDurationMs: 10 * 60 * 1e3,
-  // 10 minutes
-  batchSize: 50,
-  flushIntervalMs: 1e4
-  // 10 seconds
-};
-var ReplayRecorder = class {
-  constructor(config, onFlush) {
-    this._buffer = [];
-    this._stopFn = null;
-    this._flushTimer = null;
-    this._maxTimer = null;
-    this._recording = false;
-    this._config = { ...DEFAULTS, ...config };
-    this._onFlush = onFlush;
-  }
-  async start() {
-    if (this._recording) return;
-    if (typeof window === "undefined") return;
-    const rrweb = await import('rrweb');
-    const recordFn = rrweb.record;
-    const opts = {
-      emit: (event) => {
-        this._buffer.push(event);
-        if (this._buffer.length >= this._config.batchSize) {
-          this.flush();
-        }
-      },
-      maskAllInputs: this._config.maskAllInputs,
-      blockSelector: this._config.blockSelector ?? void 0
-    };
-    if (this._config.maskAllText) {
-      opts.maskTextSelector = "*";
-    }
-    if (this._config.ignoreSelector) {
-      opts.ignoreClass = this._config.ignoreSelector;
-    }
-    if (this._config.sampling) {
-      opts.sampling = {
-        mousemove: this._config.sampling.mousemove,
-        scroll: this._config.sampling.scroll,
-        media: this._config.sampling.media,
-        input: this._config.sampling.input
-      };
-    }
-    this._stopFn = recordFn(opts) || null;
-    this._recording = true;
-    this._flushTimer = setInterval(() => this.flush(), this._config.flushIntervalMs);
-    this._maxTimer = setTimeout(() => this.stop(), this._config.maxDurationMs);
-  }
-  flush() {
-    if (this._buffer.length === 0) return;
-    const events = this._buffer.splice(0);
-    this._onFlush(events);
-  }
-  stop() {
-    if (!this._recording) return;
-    this._recording = false;
-    if (this._stopFn) {
-      this._stopFn();
-      this._stopFn = null;
-    }
-    if (this._flushTimer) {
-      clearInterval(this._flushTimer);
-      this._flushTimer = null;
-    }
-    if (this._maxTimer) {
-      clearTimeout(this._maxTimer);
-      this._maxTimer = null;
-    }
-    this.flush();
-  }
-  get isRecording() {
-    return this._recording;
-  }
-};
-
 // src/logger.ts
 var _Apperio = class _Apperio {
   constructor(config) {
@@ -1776,7 +1774,6 @@ var _Apperio = class _Apperio {
     this._remoteConfigManager = null;
     this._traceContextManager = null;
     this._patternDetector = null;
-    this._replayRecorder = null;
     this._lastTimestamp = "";
     this._timestampCounter = 0;
     this._config = {
@@ -1814,7 +1811,6 @@ var _Apperio = class _Apperio {
         autoTraceNetworkRequests: false,
         ...config.tracing || {}
       },
-      replay: config.replay || void 0,
       enablePatternDetection: config.enablePatternDetection !== false,
       onPatternDetected: config.onPatternDetected || void 0
     };
@@ -1824,21 +1820,10 @@ var _Apperio = class _Apperio {
     if (!this._config.projectId) {
       throw new Error("Apperio: Project ID is required.");
     }
-    try {
-      if (typeof axios === "undefined") {
-        throw new Error("Axios is not available in this environment");
-      }
-      this._axiosInstance = axios.create({
-        timeout: 1e4,
-        headers: {
-          "Content-Type": "application/json",
-          "X-API-Key": this._config.apiKey
-        }
-      });
-    } catch (error) {
-      console.error("Apperio: Failed to create HTTP client:", error);
-      throw new Error("Axios is not available in this environment");
-    }
+    this._headers = {
+      "Content-Type": "application/json",
+      "X-API-Key": this._config.apiKey
+    };
     this._autoInstrumentation = new AutoInstrumentation(this);
     const sanitizationConfig = config.sanitization?.config || {};
     this._dataSanitizer = createDataSanitizer(sanitizationConfig);
@@ -1900,12 +1885,6 @@ var _Apperio = class _Apperio {
     }
     if (this._config.enablePatternDetection) {
       this._patternDetector = new PatternDetector();
-    }
-    if (this._config.replay?.enabled && typeof window !== "undefined") {
-      this._replayRecorder = new ReplayRecorder(this._config.replay, (events) => {
-        this._sendReplayEvents(events);
-      });
-      this._replayRecorder.start();
     }
     if (this._config.remoteConfig?.enabled) {
       this._remoteConfigManager = new RemoteConfigManager(
@@ -2101,41 +2080,29 @@ var _Apperio = class _Apperio {
     if (logs.length === 0) {
       return;
     }
-    const sendPromises = logs.map((log) => this._sendSingleLog(log));
-    try {
-      await Promise.all(sendPromises);
-    } catch (error) {
-      throw error;
-    }
-  }
-  async _sendSingleLog(log) {
+    const url = `${this._config.endpoint}/${this._config.projectId}/logs/batch`;
     for (let attempt = 0; attempt <= this._config.maxRetries; attempt++) {
       try {
-        const fullUrl = `${this._config.endpoint}/${this._config.projectId}/logs`;
-        const response = await this._axiosInstance.post(fullUrl, log);
-        if (response.status >= 200 && response.status < 300) {
+        const response = await fetch(url, {
+          method: "POST",
+          headers: this._headers,
+          body: JSON.stringify({ logs })
+        });
+        if (response.ok) {
           return;
-        } else {
-          console.warn(`Apperio: API returned status ${response.status} on attempt ${attempt + 1}.`);
         }
-      } catch (error) {
-        const axiosError = error;
-        if (axiosError.response) {
-          console.error(
-            `Apperio: API Error ${axiosError.response.config.url} on attempt ${attempt + 1}`
-          );
-          if (axiosError.response.status >= 400 && axiosError.response.status < 500) {
-            if (axiosError.response.status === 401 || axiosError.response.status === 403) {
-              console.error("Apperio: Authentication/Authorization failed. Check API Key.");
-            }
-            throw new Error(`Apperio: Non-retryable API error: ${axiosError.response.status}`);
+        if (response.status >= 400 && response.status < 500) {
+          if (response.status === 401 || response.status === 403) {
+            console.error("Apperio: Authentication/Authorization failed. Check API Key.");
           }
-        } else if (axiosError.request) {
-          console.error(`Apperio: Network Error on attempt ${attempt + 1}: No response from server.`);
-        } else {
-          console.error(`Apperio: Request setup error on attempt ${attempt + 1}:`, axiosError.message);
-          throw new Error(`Apperio: Non-retryable request error: ${axiosError.message}`);
+          throw new Error(`Apperio: Non-retryable API error: ${response.status}`);
         }
+        console.warn(`Apperio: API returned status ${response.status} on attempt ${attempt + 1}.`);
+      } catch (error) {
+        if (error instanceof Error && error.message.startsWith("Apperio: Non-retryable")) {
+          throw error;
+        }
+        console.error(`Apperio: Network error on attempt ${attempt + 1}:`, error.message);
       }
       if (attempt < this._config.maxRetries) {
         const retryDelay = getExponentialBackoffDelay(attempt, this._config.retryDelayMs);
@@ -2143,7 +2110,7 @@ var _Apperio = class _Apperio {
         await delay(retryDelay);
       }
     }
-    throw new Error(`Apperio: Failed to send log after ${this._config.maxRetries} retries.`);
+    throw new Error(`Apperio: Failed to send logs after ${this._config.maxRetries} retries.`);
   }
   // Data sanitization methods
   getSanitizationConfig() {
@@ -2206,27 +2173,15 @@ var _Apperio = class _Apperio {
     if (config.autoCapture) {
       this._config.autoCapture = { ...this._config.autoCapture, ...config.autoCapture };
     }
-  }
-  async _sendReplayEvents(events) {
-    if (!this._config.apiKey || !this._config.projectId) return;
-    const sessionId = this._context.sessionId || "unknown";
-    try {
-      await this._axiosInstance.post(
-        `${this._config.endpoint}/${this._config.projectId}/replay`,
-        { sessionId, events },
-        {
-          timeout: 1e4
-        }
-      );
-    } catch {
+    if (config.sanitization?.preset) {
+      const preset = SANITIZATION_PRESETS[config.sanitization.preset];
+      if (preset) {
+        this._dataSanitizer.updateConfig(preset);
+      }
     }
   }
   async shutdown() {
     this._isShuttingDown = true;
-    if (this._replayRecorder) {
-      this._replayRecorder.stop();
-      this._replayRecorder = null;
-    }
     if (this._flushTimer) {
       clearInterval(this._flushTimer);
       this._flushTimer = null;
@@ -2860,6 +2815,6 @@ var createLogger = (config) => {
   return new Apperio(config);
 };
 
-export { Apperio, AutoInstrumentation, BreadcrumbManager, CircuitBreaker, CircuitBreakerState, DataSanitizer, HealthMetricsCollector, LogLevel, OfflineManager, PII_PATTERNS, PatternDetector, RemoteConfigManager, ReplayRecorder, SANITIZATION_PRESETS, Span, TraceContextManager, TracePropagator, compressPayload, createDataSanitizer, createLogger, preparePayloadForTransmission, uint8ArrayToBase64 };
+export { Apperio, AutoInstrumentation, BreadcrumbManager, CircuitBreaker, CircuitBreakerState, DataSanitizer, HealthMetricsCollector, LogLevel, OfflineManager, PII_PATTERNS, PatternDetector, RemoteConfigManager, SANITIZATION_PRESETS, Span, TraceContextManager, TracePropagator, compressPayload, createDataSanitizer, createLogger, preparePayloadForTransmission, uint8ArrayToBase64 };
 //# sourceMappingURL=index.mjs.map
 //# sourceMappingURL=index.mjs.map

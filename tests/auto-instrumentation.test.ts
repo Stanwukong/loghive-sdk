@@ -4,16 +4,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { AutoInstrumentation } from "../src/auto-instrumentation";
 import { Apperio } from "../src/logger";
 import { LogLevel } from "../src/types";
-import axios from "axios";
-
-// Mock axios
-vi.mock("axios", () => ({
-  default: {
-    create: vi.fn().mockReturnValue({
-      post: vi.fn().mockResolvedValue({ data: { status: "success" } }),
-    }),
-  },
-}));
 
 describe("AutoInstrumentation", () => {
   let logger: Apperio;
@@ -23,12 +13,10 @@ describe("AutoInstrumentation", () => {
   beforeEach(() => {
     vi.useFakeTimers();
 
-    const mockAxios = {
-      create: vi.fn().mockReturnThis(),
-      post: vi.fn().mockResolvedValue({ data: { status: "success" } }),
-    };
-    (axios.create as any).mockReturnValue(mockAxios);
-    (axios as any).create = axios.create;
+    // Mock fetch globally
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ status: "success" }), { status: 200 })
+    ));
 
     // Suppress console output during tests
     vi.spyOn(console, "warn").mockImplementation(() => {});
@@ -73,6 +61,7 @@ describe("AutoInstrumentation", () => {
       (logger as any)._logBuffer = [];
     }
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
     vi.useRealTimers();
   });
 
@@ -146,9 +135,6 @@ describe("AutoInstrumentation", () => {
 
   describe("Console Capture", () => {
     it("should capture console.error calls", () => {
-      // Store reference to the original console.error BEFORE patching
-      const originalConsoleError = console.error;
-
       autoInstrumentation.init({ consoleMessages: true });
 
       console.error("Test error message");
@@ -333,11 +319,6 @@ describe("AutoInstrumentation", () => {
       // Advance past the throttle timeout (100ms)
       await vi.advanceTimersByTimeAsync(200);
 
-      // Scroll callback creates a synthetic event with no real target.
-      // The captureInteraction checks `if (!target) return`.
-      // Scroll events generate a new Event("scroll") inside the throttle,
-      // so target is null. The logSpy won't be called.
-      // Instead, verify that multiple rapid scroll events don't cause multiple immediate calls
       const scrollCalls = logSpy.mock.calls.filter(
         (call) => call[1] === "User scroll"
       );
@@ -496,6 +477,21 @@ describe("AutoInstrumentation", () => {
       expect(XMLHttpRequest.prototype.open).toBe(originalOpen);
       expect(XMLHttpRequest.prototype.send).toBe(originalSend);
     });
+
+    it("should restore History API after destroy", () => {
+      const originalPushState = history.pushState;
+      const originalReplaceState = history.replaceState;
+
+      autoInstrumentation.init({ pageViews: true });
+
+      expect(history.pushState).not.toBe(originalPushState);
+      expect(history.replaceState).not.toBe(originalReplaceState);
+
+      autoInstrumentation.destroy();
+
+      expect(history.pushState).toBe(originalPushState);
+      expect(history.replaceState).toBe(originalReplaceState);
+    });
   });
 
   describe("Browser Guard", () => {
@@ -523,7 +519,6 @@ describe("AutoInstrumentation", () => {
       autoInstrumentation.init({ errors: true });
 
       // Verify console was NOT captured (no console patching)
-      // We check by ensuring console.error is still the mocked version from beforeEach
       const consoleErrorBefore = console.error;
       autoInstrumentation.init({ errors: true });
       expect(console.error).toBe(consoleErrorBefore);

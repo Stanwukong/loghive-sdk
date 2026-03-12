@@ -106,9 +106,9 @@ export const PII_PATTERNS: SanitizationRule[] = [
     category: 'authentication'
   },
   
-  // Bank account numbers (basic pattern)
+  // Bank account numbers (requires contextual keyword to avoid false positives on UUIDs/timestamps)
   {
-    pattern: /\b\d{8,17}\b/g,
+    pattern: /(?:account|acct|routing|iban|bank)[#:\s_-]*\d{8,17}\b/gi,
     replacement: '[ACCOUNT_REDACTED]',
     description: 'Bank account number redaction',
     severity: 'critical',

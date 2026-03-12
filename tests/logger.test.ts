@@ -3,26 +3,19 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { Apperio } from "../src/logger";
 import { LogLevel } from "../src/types";
-import axios from "axios";
-
-// Mock axios
-vi.mock("axios");
 
 describe("Apperio Logger", () => {
-  let mockAxios: any;
+  let mockFetch: ReturnType<typeof vi.fn>;
   let logger: Apperio;
 
   beforeEach(() => {
     vi.useFakeTimers();
 
-    // Setup axios mock
-    mockAxios = {
-      create: vi.fn().mockReturnThis(),
-      post: vi.fn().mockResolvedValue({ status: 200, data: { status: "success" } }),
-    };
-
-    (axios.create as any).mockReturnValue(mockAxios);
-    (axios as any).create = axios.create;
+    // Setup fetch mock
+    mockFetch = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ status: "success" }), { status: 200 })
+    );
+    vi.stubGlobal("fetch", mockFetch);
 
     // Suppress console warnings during tests
     vi.spyOn(console, "warn").mockImplementation(() => {});
@@ -42,6 +35,7 @@ describe("Apperio Logger", () => {
       (logger as any)._logBuffer = [];
     }
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
     vi.useRealTimers();
   });
 
@@ -288,7 +282,8 @@ describe("Apperio Logger", () => {
       // Should flush immediately
       await vi.advanceTimersByTimeAsync(100);
 
-      expect(mockAxios.post).toHaveBeenCalledTimes(5);
+      // One batch POST containing all 5 logs
+      expect(mockFetch).toHaveBeenCalledTimes(1);
       expect((logger as any)._logBuffer).toHaveLength(0);
     });
 
@@ -302,7 +297,7 @@ describe("Apperio Logger", () => {
       // Advance time by flushIntervalMs
       await vi.advanceTimersByTimeAsync(10000);
 
-      expect(mockAxios.post).toHaveBeenCalled();
+      expect(mockFetch).toHaveBeenCalled();
       expect((logger as any)._logBuffer).toHaveLength(0);
     });
 
@@ -408,50 +403,34 @@ describe("Apperio Logger", () => {
     });
 
     it("should retry on network failure", async () => {
-      // Create Axios-like network errors (have request but no response = retryable)
-      const makeNetworkError = () => {
-        const err: any = new Error("Network error");
-        err.request = {}; // Axios-like: has request, no response
-        return err;
-      };
-
-      mockAxios.post
-        .mockRejectedValueOnce(makeNetworkError())
-        .mockRejectedValueOnce(makeNetworkError())
-        .mockResolvedValueOnce({ status: 200, data: { status: "success" } });
+      mockFetch
+        .mockRejectedValueOnce(new Error("Network error"))
+        .mockRejectedValueOnce(new Error("Network error"))
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify({ status: "success" }), { status: 200 })
+        );
 
       logger.info("Test message");
 
       await vi.advanceTimersByTimeAsync(30000);
 
       // Should have retried and eventually succeeded
-      expect(mockAxios.post).toHaveBeenCalledTimes(3);
+      expect(mockFetch).toHaveBeenCalledTimes(3);
     });
 
     it("should give up after maxRetries", async () => {
-      // Create Axios-like network errors (retryable)
-      const makeNetworkError = () => {
-        const err: any = new Error("Network error");
-        err.request = {};
-        return err;
-      };
-      mockAxios.post.mockImplementation(() => Promise.reject(makeNetworkError()));
+      mockFetch.mockRejectedValue(new Error("Network error"));
 
       logger.info("Test message");
 
       await vi.advanceTimersByTimeAsync(30000);
 
       // Initial attempt + 3 retries = 4 total
-      expect(mockAxios.post).toHaveBeenCalledTimes(4);
+      expect(mockFetch).toHaveBeenCalledTimes(4);
     });
 
     it("should re-queue failed logs at buffer front", async () => {
-      const makeNetworkError = () => {
-        const err: any = new Error("Network error");
-        err.request = {};
-        return err;
-      };
-      mockAxios.post.mockImplementation(() => Promise.reject(makeNetworkError()));
+      mockFetch.mockRejectedValue(new Error("Network error"));
 
       logger.info("First message");
 
@@ -490,7 +469,7 @@ describe("Apperio Logger", () => {
       // Flush via timer advancement (the flush interval)
       await vi.advanceTimersByTimeAsync(10000);
 
-      expect(mockAxios.post).toHaveBeenCalled();
+      expect(mockFetch).toHaveBeenCalled();
       expect((logger as any)._logBuffer).toHaveLength(0);
     });
 

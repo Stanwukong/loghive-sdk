@@ -37,7 +37,7 @@ export default defineConfig({
   platform: "neutral", // Works in both browser and Node.js
 
   // External dependencies (don't bundle)
-  external: ["axios", "dotenv", "rrweb", "@rrweb/types"],
+  external: ["dotenv"],
 
   // Bundle size analysis (optional)
   metafile: true,

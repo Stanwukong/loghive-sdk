@@ -1,5 +1,4 @@
 // src/logger.ts
-import axios, { AxiosInstance, AxiosError } from 'axios';
 import { LoggerConfig, LogEntry, LogLevel } from './types';
 import { delay, getExponentialBackoffDelay, shouldLog, extractErrorDetails, isInBrowser } from './utils';
 import { AutoInstrumentation } from './auto-instrumentation';
@@ -20,7 +19,7 @@ export class Apperio {
   private _isFlushing: boolean = false;
   private _isShuttingDown: boolean = false;
   private _initialized: boolean = false;
-  private _axiosInstance: AxiosInstance;
+  private _headers: Record<string, string>;
   private _autoInstrumentation: AutoInstrumentation;
   private _dataSanitizer: DataSanitizer;
   private _beforeUnloadHandler: (() => void) | null = null;
@@ -80,26 +79,12 @@ export class Apperio {
       throw new Error('Apperio: Project ID is required.');
     }
 
-    // Axios instance creation with error handling
-    try {
-      if (typeof axios === 'undefined') {
-        throw new Error('Axios is not available in this environment')
-      }
+    this._headers = {
+      'Content-Type': 'application/json',
+      'X-API-Key': this._config.apiKey,
+    };
 
-      // Create Axios instance
-    this._axiosInstance = axios.create({
-      timeout: 10000,
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': this._config.apiKey,
-      },
-    });
-    } catch (error) {
-      console.error('Apperio: Failed to create HTTP client:', error)
-      throw new Error('Axios is not available in this environment')
-    } 
 
-    
 
     // Initialize auto-instrumentation
     this._autoInstrumentation = new AutoInstrumentation(this);
@@ -441,47 +426,33 @@ export class Apperio {
       return;
     }
 
-    const sendPromises = logs.map(log => this._sendSingleLog(log));
-    
-    try {
-      await Promise.all(sendPromises);
-      // Silent in production — only log in debug mode
-    } catch (error) {
-      throw error;
-    }
-  }
+    const url = `${this._config.endpoint}/${this._config.projectId}/logs/batch`;
 
-  private async _sendSingleLog(log: LogEntry): Promise<void> {
     for (let attempt = 0; attempt <= this._config.maxRetries; attempt++) {
       try {
-        const fullUrl = `${this._config.endpoint}/${this._config.projectId}/logs`;
-        
-        const response = await this._axiosInstance.post(fullUrl, log);
-        
-        if (response.status >= 200 && response.status < 300) {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: this._headers,
+          body: JSON.stringify({ logs }),
+        });
+
+        if (response.ok) {
           return;
-        } else {
-          console.warn(`Apperio: API returned status ${response.status} on attempt ${attempt + 1}.`);
         }
-      } catch (error) {
-        const axiosError = error as AxiosError;
-        
-        if (axiosError.response) {
-          console.error(
-            `Apperio: API Error ${axiosError.response.config.url} on attempt ${attempt + 1}`);
-          
-          if (axiosError.response.status >= 400 && axiosError.response.status < 500) {
-            if (axiosError.response.status === 401 || axiosError.response.status === 403) {
-              console.error('Apperio: Authentication/Authorization failed. Check API Key.');
-            }
-            throw new Error(`Apperio: Non-retryable API error: ${axiosError.response.status}`);
+
+        if (response.status >= 400 && response.status < 500) {
+          if (response.status === 401 || response.status === 403) {
+            console.error('Apperio: Authentication/Authorization failed. Check API Key.');
           }
-        } else if (axiosError.request) {
-          console.error(`Apperio: Network Error on attempt ${attempt + 1}: No response from server.`);
-        } else {
-          console.error(`Apperio: Request setup error on attempt ${attempt + 1}:`, axiosError.message);
-          throw new Error(`Apperio: Non-retryable request error: ${axiosError.message}`);
+          throw new Error(`Apperio: Non-retryable API error: ${response.status}`);
         }
+
+        console.warn(`Apperio: API returned status ${response.status} on attempt ${attempt + 1}.`);
+      } catch (error) {
+        if (error instanceof Error && error.message.startsWith('Apperio: Non-retryable')) {
+          throw error;
+        }
+        console.error(`Apperio: Network error on attempt ${attempt + 1}:`, (error as Error).message);
       }
 
       if (attempt < this._config.maxRetries) {
@@ -490,8 +461,8 @@ export class Apperio {
         await delay(retryDelay);
       }
     }
-    
-    throw new Error(`Apperio: Failed to send log after ${this._config.maxRetries} retries.`);
+
+    throw new Error(`Apperio: Failed to send logs after ${this._config.maxRetries} retries.`);
   }
 
   // Data sanitization methods

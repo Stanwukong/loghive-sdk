@@ -28,6 +28,17 @@ export class AutoInstrumentation {
   private performanceObserver?: PerformanceObserver;
   private breadcrumbManager: BreadcrumbManager;
   private webVitalObservers: PerformanceObserver[] = [];
+  // Stored listener references for cleanup
+  private _errorHandler?: (event: ErrorEvent) => void;
+  private _rejectionHandler?: (event: PromiseRejectionEvent) => void;
+  private _clickHandler?: (event: MouseEvent) => void;
+  private _scrollHandler?: () => void;
+  private _focusHandler?: (event: FocusEvent) => void;
+  private _blurHandler?: (event: FocusEvent) => void;
+  private _keypressHandler?: (event: KeyboardEvent) => void;
+  private _popstateHandler?: () => void;
+  private _originalPushState?: typeof history.pushState;
+  private _originalReplaceState?: typeof history.replaceState;
 
   constructor(logger: Apperio) {
     this.logger = logger;
@@ -81,10 +92,9 @@ export class AutoInstrumentation {
 
   private setupErrorCapture(): void {
     // Global error handler
-    window.addEventListener("error", (event: ErrorEvent) => {
+    this._errorHandler = (event: ErrorEvent) => {
       const errorDetails = extractErrorDetails(event);
 
-      // All uncaught errors are ERROR level - they need immediate attention
       this.logger._log(LogLevel.ERROR, "Uncaught Error", undefined, {
         eventType: "error",
         error: errorDetails,
@@ -94,35 +104,33 @@ export class AutoInstrumentation {
         breadcrumbs: this.breadcrumbManager.getAll(),
         environment: this.breadcrumbManager.captureEnvironment(),
       });
-    });
+    };
+    window.addEventListener("error", this._errorHandler);
 
     // Unhandled promise rejection handler
-    window.addEventListener(
-      "unhandledrejection",
-      (event: PromiseRejectionEvent) => {
-        const error =
-          event.reason instanceof Error
-            ? event.reason
-            : new Error(String(event.reason));
-        const errorDetails = extractErrorDetails(error);
+    this._rejectionHandler = (event: PromiseRejectionEvent) => {
+      const error =
+        event.reason instanceof Error
+          ? event.reason
+          : new Error(String(event.reason));
+      const errorDetails = extractErrorDetails(error);
 
-        // Promise rejections are also ERROR level - they indicate unhandled failures
-        this.logger._log(
-          LogLevel.ERROR,
-          "Unhandled Promise Rejection",
-          undefined,
-          {
-            eventType: "error",
-            error: errorDetails,
-            url: window.location.href,
-            userAgent: navigator.userAgent,
-            timestamp: Date.now(),
-            breadcrumbs: this.breadcrumbManager.getAll(),
-            environment: this.breadcrumbManager.captureEnvironment(),
-          }
-        );
-      }
-    );
+      this.logger._log(
+        LogLevel.ERROR,
+        "Unhandled Promise Rejection",
+        undefined,
+        {
+          eventType: "error",
+          error: errorDetails,
+          url: window.location.href,
+          userAgent: navigator.userAgent,
+          timestamp: Date.now(),
+          breadcrumbs: this.breadcrumbManager.getAll(),
+          environment: this.breadcrumbManager.captureEnvironment(),
+        }
+      );
+    };
+    window.addEventListener("unhandledrejection", this._rejectionHandler);
   }
 
   private setupPerformanceCapture(): void {
@@ -237,64 +245,49 @@ export class AutoInstrumentation {
     };
 
     // Click events
-    document.addEventListener(
-      "click",
-      (event) => {
-        const target = event.target as Element;
-        if (target) {
-          this.breadcrumbManager.add({
-            timestamp: Date.now(),
-            category: 'ui',
-            message: 'User click',
-            level: 'debug',
-            data: {
-              target: getElementSelector(target),
-              coordinates: { x: event.clientX, y: event.clientY },
-            },
-          });
-        }
-        captureInteraction("click", event);
-      },
-      true
-    );
+    this._clickHandler = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (target) {
+        this.breadcrumbManager.add({
+          timestamp: Date.now(),
+          category: 'ui',
+          message: 'User click',
+          level: 'debug',
+          data: {
+            target: getElementSelector(target),
+            coordinates: { x: event.clientX, y: event.clientY },
+          },
+        });
+      }
+      captureInteraction("click", event);
+    };
+    document.addEventListener("click", this._clickHandler as EventListener, true);
 
     // Scroll events (throttled)
     let scrollTimeout: number;
-    document.addEventListener(
-      "scroll",
-      () => {
-        clearTimeout(scrollTimeout);
-        scrollTimeout = window.setTimeout(() => {
-          captureInteraction("scroll", new Event("scroll"));
-        }, 100);
-      },
-      true
-    );
+    this._scrollHandler = () => {
+      clearTimeout(scrollTimeout);
+      scrollTimeout = window.setTimeout(() => {
+        captureInteraction("scroll", new Event("scroll"));
+      }, 100);
+    };
+    document.addEventListener("scroll", this._scrollHandler, true);
 
     // Focus/blur events
-    document.addEventListener(
-      "focus",
-      (event) => captureInteraction("focus", event),
-      true
-    );
-    document.addEventListener(
-      "blur",
-      (event) => captureInteraction("blur", event),
-      true
-    );
+    this._focusHandler = (event: FocusEvent) => captureInteraction("focus", event);
+    this._blurHandler = (event: FocusEvent) => captureInteraction("blur", event);
+    document.addEventListener("focus", this._focusHandler as EventListener, true);
+    document.addEventListener("blur", this._blurHandler as EventListener, true);
 
     // Keypress events (throttled and sanitized)
     let keypressTimeout: number;
-    document.addEventListener(
-      "keypress",
-      (event) => {
-        clearTimeout(keypressTimeout);
-        keypressTimeout = window.setTimeout(() => {
-          captureInteraction("keypress", event);
-        }, 100);
-      },
-      true
-    );
+    this._keypressHandler = (event: KeyboardEvent) => {
+      clearTimeout(keypressTimeout);
+      keypressTimeout = window.setTimeout(() => {
+        captureInteraction("keypress", event);
+      }, 100);
+    };
+    document.addEventListener("keypress", this._keypressHandler as EventListener, true);
   }
 
   private setupNetworkCapture(): void {
@@ -606,23 +599,25 @@ export class AutoInstrumentation {
     this.capturePageView();
 
     // History API changes (SPA navigation)
-    const originalPushState = history.pushState;
-    const originalReplaceState = history.replaceState;
+    this._originalPushState = history.pushState;
+    this._originalReplaceState = history.replaceState;
 
-    history.pushState = (...args) => {
-      originalPushState.apply(history, args);
-      setTimeout(() => this.capturePageView(), 0);
+    const self = this;
+    history.pushState = function (...args) {
+      self._originalPushState!.apply(history, args);
+      setTimeout(() => self.capturePageView(), 0);
     };
 
-    history.replaceState = (...args) => {
-      originalReplaceState.apply(history, args);
-      setTimeout(() => this.capturePageView(), 0);
+    history.replaceState = function (...args) {
+      self._originalReplaceState!.apply(history, args);
+      setTimeout(() => self.capturePageView(), 0);
     };
 
     // Popstate events (back/forward)
-    window.addEventListener("popstate", () => {
+    this._popstateHandler = () => {
       setTimeout(() => this.capturePageView(), 0);
-    });
+    };
+    window.addEventListener("popstate", this._popstateHandler);
   }
 
   private capturePageView(): void {
@@ -770,7 +765,40 @@ export class AutoInstrumentation {
     }
     this.webVitalObservers = [];
 
-    // Remove event listeners would require keeping references
-    // For now, they'll remain but won't do anything after destroy
+    // Remove error listeners
+    if (this._errorHandler) {
+      window.removeEventListener("error", this._errorHandler);
+    }
+    if (this._rejectionHandler) {
+      window.removeEventListener("unhandledrejection", this._rejectionHandler);
+    }
+
+    // Remove interaction listeners
+    if (this._clickHandler) {
+      document.removeEventListener("click", this._clickHandler as EventListener, true);
+    }
+    if (this._scrollHandler) {
+      document.removeEventListener("scroll", this._scrollHandler, true);
+    }
+    if (this._focusHandler) {
+      document.removeEventListener("focus", this._focusHandler as EventListener, true);
+    }
+    if (this._blurHandler) {
+      document.removeEventListener("blur", this._blurHandler as EventListener, true);
+    }
+    if (this._keypressHandler) {
+      document.removeEventListener("keypress", this._keypressHandler as EventListener, true);
+    }
+
+    // Remove popstate listener and restore History API
+    if (this._popstateHandler) {
+      window.removeEventListener("popstate", this._popstateHandler);
+    }
+    if (this._originalPushState) {
+      history.pushState = this._originalPushState;
+    }
+    if (this._originalReplaceState) {
+      history.replaceState = this._originalReplaceState;
+    }
   }
 }
